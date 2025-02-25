@@ -70,4 +70,4 @@ def find_files(
         return response
     else:
         msg="Catalog service could not be reached in time."
-        raise Exception(msg)
+        raise RuntimeError(msg)

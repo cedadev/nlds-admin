@@ -69,4 +69,4 @@ def list_holdings(
         return response
     else:
         msg="Catalog service could not be reached in time."
-        raise Exception(msg)
+        raise RuntimeError(msg)

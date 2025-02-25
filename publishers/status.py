@@ -48,7 +48,7 @@ def get_request_status(
             state = State(state).value
         else:
             msg="Given State not valid."
-            raise Exception(msg)
+            raise RuntimeError(msg)
 
     # Validate transaction_id is a valid uuid
     if transaction_id is not None:
@@ -56,14 +56,14 @@ def get_request_status(
             uuid.UUID(transaction_id)
         except ValueError:
             msg="Given transaction_id not a valid uuid-4."
-            raise Exception(msg)
+            raise RuntimeError(msg)
     # Validate sub_id is a valid uuid
     if sub_id is not None:
         try:
             uuid.UUID(sub_id)
         except ValueError:
             msg="Given sub_id not a valid uuid-4."
-            raise Exception(msg)
+            raise RuntimeError(msg)
 
     # Assemble message ready for RCP call
     msg_dict = {
@@ -99,7 +99,7 @@ def get_request_status(
         except KeyError as e:
             msg = (f"Encountered error when trying to get a record list from the"
                    f" message response ({e})")
-            raise Exception(msg)
+            raise RuntimeError(msg)
 
         transaction_response = None
         # Only continue if the response actually had any transactions in it
@@ -117,4 +117,4 @@ def get_request_status(
         return response
     else:
         msg="Monitoring service could not be reached in time.",
-        raise Exception(msg)
+        raise RuntimeError(msg)
