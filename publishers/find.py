@@ -34,7 +34,11 @@ def find_files(
             MSG.USER: user,
             MSG.GROUP: group,
             MSG.GROUPALL: groupall,
+            MSG.LABEL: label,
+            MSG.HOLDING_ID: holding_id,
+            MSG.TRANSACT_ID: transaction_id,
             MSG.API_ACTION: api_action,
+            MSG.TAG: {},
         },
         MSG.DATA: {},
         MSG.TYPE: MSG.TYPE_STANDARD,
@@ -57,6 +61,7 @@ def find_files(
             meta_dict[MSG.TAG] = tag_dict
     if path:
         meta_dict[MSG.PATH] = path
+        msg_dict[MSG.DETAILS][MSG.PATH] = path
     if len(meta_dict) > 0:
         msg_dict[MSG.META] = meta_dict
 
