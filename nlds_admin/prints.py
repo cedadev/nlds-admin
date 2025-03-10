@@ -1,7 +1,7 @@
 import click
 from datetime import datetime
 
-from rabbit.state import State
+from nlds_admin.rabbit.state import State
 
 
 def integer_permissions_to_string(intperm):
@@ -18,6 +18,7 @@ def integer_permissions_to_string(intperm):
             else:
                 result += "-"
     return result
+
 
 def pretty_size(size):
     """Returns file size in human readable format"""
@@ -37,11 +38,13 @@ def pretty_size(size):
             return round(size / float(multipler), 2).__str__() + suf
     return round(size / float(multipler), 2).__str__() + suf
 
+
 def _tags_to_str(tags):
     tags_str = ""
     for t in tags:
         tags_str += f"{t} : {tags[t]}\n{'':22}"
     return tags_str
+
 
 def get_transaction_state(transaction: dict):
     """Get the overall state of a transaction in a more convienent form by
@@ -94,28 +97,28 @@ def get_transaction_state(transaction: dict):
     The overall state is the minimum of these
     """
     state_mapping = {
-        "INITIALISING" : -1,
-        "ROUTING" : 0,
-        "SPLITTING" : 1,
-        "INDEXING" : 2,
-        "CATALOG_PUTTING" : 3,
-        "TRANSFER_PUTTING" : 4,
-        "CATALOG_GETTING" : 10,
-        "ARCHIVE_GETTING" : 11,
-        "TRANSFER_GETTING" : 12,
-        "TRANSFER_INIT" : 13,
-        "ARCHIVE_INIT" : 20,
-        "ARCHIVE_PUTTING" : 21,
-        "ARCHIVE_PREPARING" : 22,
-        "CATALOG_DELETING" : 30,
-        "CATALOG_UPDATING" : 31,
-        "CATALOG_ARCHIVE_UPDATING" : 32,
-        "CATALOG_REMOVING" : 33,
-        "COMPLETE" : 100,
-        "FAILED" : 101,
-        "COMPLETE_WITH_ERRORS" : 102,
-        "COMPLETE_WITH_WARNINGS" : 103,
-        "SEARCHING" : 1000,
+        "INITIALISING": -1,
+        "ROUTING": 0,
+        "SPLITTING": 1,
+        "INDEXING": 2,
+        "CATALOG_PUTTING": 3,
+        "TRANSFER_PUTTING": 4,
+        "CATALOG_GETTING": 10,
+        "ARCHIVE_GETTING": 11,
+        "TRANSFER_GETTING": 12,
+        "TRANSFER_INIT": 13,
+        "ARCHIVE_INIT": 20,
+        "ARCHIVE_PUTTING": 21,
+        "ARCHIVE_PREPARING": 22,
+        "CATALOG_DELETING": 30,
+        "CATALOG_UPDATING": 31,
+        "CATALOG_ARCHIVE_UPDATING": 32,
+        "CATALOG_REMOVING": 33,
+        "COMPLETE": 100,
+        "FAILED": 101,
+        "COMPLETE_WITH_ERRORS": 102,
+        "COMPLETE_WITH_WARNINGS": 103,
+        "SEARCHING": 1000,
     }
     state_mapping_reverse = {v: k for k, v in state_mapping.items()}
 
@@ -147,6 +150,7 @@ def get_transaction_state(transaction: dict):
 
     return state_mapping_reverse[min_state], min_time
 
+
 def _get_url_from_file(f):
     url = None
     for s in f["locations"]:
@@ -155,8 +159,6 @@ def _get_url_from_file(f):
     return url
 
 
-
-        
 def print_single_list(response: dict):
     h = response[0]
     click.echo(f"{'':<4}{'user':<16}: {h['user']}")
@@ -173,14 +175,12 @@ def print_single_list(response: dict):
         tags_str = _tags_to_str(h["tags"])
         click.echo(f"{'':<4}{'tags':<16}: {tags_str[:-23]}")
 
+
 def print_multi_list(response: dict):
     for h in response:
         click.echo(
             f"{'':<4}{h['user']:<16}{h['id']:<6}{h['label']:<16}{h['date'].replace('T',' '):<32}"
         )
-
-
-
 
 
 def print_single_file(response, print_url=False):
@@ -218,6 +218,7 @@ def print_single_file(response, print_url=False):
                 if url is not None and print_url:
                     click.echo(f"{'':<4}{'url':<16}: {url}")
 
+
 def print_simple_file(response, print_url=False):
     for hkey in response:
         h = response[hkey]
@@ -249,8 +250,6 @@ def print_multi_file(response, print_url):
                     f"{h['holding_id']:<6}{h['label']:<16}"
                     f"{size:<8}{time[:11]:<12}{path_print}"
                 )
-
-
 
 
 def print_single_stat(response: dict):
@@ -293,6 +292,7 @@ def print_single_stat(response: dict):
                     click.echo(f"{'':<9}{'+':<4} {'filepath':<8} : {ff['filepath']}")
                     click.echo(f"{'':<9}{'':>4} {'reason':<8} : {ff['reason']}")
 
+
 def print_multi_stat(response: dict):
     """Print a multi-line set of status"""
     for tr in response:
@@ -313,10 +313,6 @@ def print_multi_stat(response: dict):
             f"{job_label:16}{label:16}"
             f"{state:<23}{time:<20}"
         )
-
-
-
-
 
 
 def construct_header_string(details, time, simple=False, url=False):
@@ -342,7 +338,7 @@ def construct_header_string(details, time, simple=False, url=False):
     if details.get("job_label"):
         header.append(f"job_label: {details['job_label']}")
     if details.get("state"):
-        state = State(details['state']).name
+        state = State(details["state"]).name
         header.append(f"state: {state}")
     if details.get("sub_id"):
         header.append(f"sub_id: {details['sub_id']}")
@@ -365,6 +361,7 @@ def construct_header_string(details, time, simple=False, url=False):
 
     return req_details
 
+
 def print_table_headers(api_action):
     """
     Prints table headers for multi-holding cases.
@@ -376,9 +373,10 @@ def print_table_headers(api_action):
         "stat": (
             f"{common}{'id':<12}{'action':<16}{'job label':<16}"
             f"{'label':<16}{'state':<23}{'last update':<20}"
-        )
+        ),
     }
     click.echo(headers.get(api_action, ""))
+
 
 def print_action(response: dict, req_details, time, simple=False, url=None):
     header = construct_header_string(req_details, time)
@@ -397,14 +395,14 @@ def print_action(response: dict, req_details, time, simple=False, url=None):
         action_messages = {
             "list": "Listing holding for",
             "find": "Listing files for holding",
-            "stat": "State of transaction for"
+            "stat": "State of transaction for",
         }
         click.echo(f"{action_messages.get(api_action)} {header}")
 
         action_functions = {
             "list": print_single_list,
             "find": lambda res: print_single_file(res, url),
-            "stat": print_single_stat
+            "stat": print_single_stat,
         }
         action_functions[api_action](response)
         return
@@ -412,7 +410,7 @@ def print_action(response: dict, req_details, time, simple=False, url=None):
     action_messages = {
         "list": "Listing holdings for",
         "find": "Listing files for holdings",
-        "stat": "State of transactions for"
+        "stat": "State of transactions for",
     }
     click.echo(f"{action_messages.get(api_action)} {header}")
 
@@ -421,6 +419,6 @@ def print_action(response: dict, req_details, time, simple=False, url=None):
     action_functions = {
         "list": print_multi_list,
         "find": lambda res: print_multi_file(res, url),
-        "stat": print_multi_stat
+        "stat": print_multi_stat,
     }
     action_functions[api_action](response)

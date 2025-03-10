@@ -1,14 +1,15 @@
 import click
 from datetime import datetime
 
-from rabbit.rpc_publisher import RabbitMQRPCPublisher
-from publishers.list import list_holdings
-from publishers.find import find_files
-from publishers.status import get_request_status
+from nlds_admin.rabbit.rpc_publisher import RabbitMQRPCPublisher
+from nlds_admin.publishers.list import list_holdings
+from nlds_admin.publishers.find import find_files
+from nlds_admin.publishers.status import get_request_status
 
 import json as jsn
 
-import prints
+from nlds_admin import prints
+
 
 @click.group()
 @click.pass_context
@@ -72,10 +73,14 @@ def nlds_admin(ctx):
     default=False,
     help="Switch between ascending and descending time order.",
 )
-def list(ctx, user, group, groupall, label, holding_id, transaction_id, tag, json, time):
-    if not(group and (user or groupall)):
-        print("must have user and group")
-        return
+def list(
+    ctx, user, group, groupall, label, holding_id, transaction_id, tag, json, time
+):
+    if not (group and (user or groupall)):
+        raise click.UsageError(
+            "Could not list holdings: user and group must be supplied, or group plus "
+            "`groupall` flag."
+        )
     rpc_publisher = ctx.obj
     try:
         ret = list_holdings(
@@ -93,13 +98,13 @@ def list(ctx, user, group, groupall, label, holding_id, transaction_id, tag, jso
     json_response = jsn.loads(ret)
     response_details = json_response["details"]
     response_data = json_response["data"]["holdings"]
-    
+
     response_data = sorted(
         response_data,
         key=lambda x: datetime.strptime(x["date"], "%Y-%m-%dT%H:%M:%S.%f"),
         reverse=time,
     )
-    
+
     if json:
         click.echo(json_response)
     else:
@@ -203,9 +208,12 @@ def find(
     url,
     time,
 ):
-    if not(group and (user or groupall)):
-        print("must have user and group")
-        return
+    if not (group and (user or groupall)):
+        raise click.UsageError(
+            "Could not find files: user and group must be supplied, or group plus "
+            "`groupall` flag."
+        )
+
     rpc_publisher = ctx.obj
     try:
         ret = find_files(
@@ -224,15 +232,20 @@ def find(
     json_response = jsn.loads(ret)
     response_details = json_response["details"]
     response_data = json_response["data"]["holdings"]
-    
+
     if response_data:
         response_data = dict(
             sorted(
                 response_data.items(),
-                key=lambda x: datetime.strptime(x[1]["transactions"][next(iter(x[1]["transactions"]))]["ingest_time"], "%Y-%m-%dT%H:%M:%S.%f"),
+                key=lambda x: datetime.strptime(
+                    x[1]["transactions"][next(iter(x[1]["transactions"]))][
+                        "ingest_time"
+                    ],
+                    "%Y-%m-%dT%H:%M:%S.%f",
+                ),
                 reverse=time,
-                )
             )
+        )
 
     if json:
         click.echo(json_response)
@@ -323,7 +336,7 @@ def find(
     help="Switch between ascending and descending time order.",
 )
 def stat(
-    ctx, 
+    ctx,
     user,
     group,
     groupall,
@@ -336,13 +349,15 @@ def stat(
     json,
     time,
 ):
-    if not(group and (user or groupall)):
-        print("must have user and group")
-        return
+    if not (group and (user or groupall)):
+        raise click.UsageError(
+            "Could not stat requests: user and group must be supplied, or group plus "
+            "`groupall` flag."
+        )
     rpc_publisher = ctx.obj
     try:
         ret = get_request_status(
-            rpc_publisher,        
+            rpc_publisher,
             user,
             group,
             groupall,
@@ -370,6 +385,10 @@ def stat(
         click.echo(json_response)
     else:
         prints.print_action(response_data, response_details, time)
+
+
+def main():
+    nlds_admin(prog_name="nlds-admin")
 
 
 if __name__ == "__main__":

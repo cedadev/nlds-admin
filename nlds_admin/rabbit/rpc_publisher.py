@@ -18,7 +18,7 @@ from pika.frame import Method, Header
 from pika.channel import Channel
 from pika.exceptions import ChannelClosedByBroker
 
-from rabbit.publisher import RabbitMQPublisher as RMQP
+from nlds_admin.rabbit.publisher import RabbitMQPublisher as RMQP
 
 
 class RabbitMQRPCPublisher(RMQP):

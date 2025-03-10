@@ -1,6 +1,6 @@
-# encoding: utf-8
+
 """
-find.py
+list.py
 """
 __author__ = "Neil Massey and Jack Leland"
 __date__ = "24 Feb 2025"
@@ -10,25 +10,24 @@ __contact__ = "neil.massey@stfc.ac.uk"
 
 from typing import Optional
 
-import rabbit.message_keys as MSG
-import rabbit.routing_keys as RK
-from publishers.process_tag import process_tag
+import nlds_admin.rabbit.routing_keys as RK
+import nlds_admin.rabbit.message_keys as MSG
+from nlds_admin.publishers.process_tag import process_tag
 
-from rabbit.rpc_publisher import RabbitMQRPCPublisher
+from nlds_admin.rabbit.rpc_publisher import RabbitMQRPCPublisher
 
-def find_files(
+def list_holdings(
     rpc_publisher: RabbitMQRPCPublisher,
     user: str,
     group: str,
     groupall: Optional[bool] = False,
-    label: Optional[str] = None,
-    holding_id: Optional[int] = None,
-    transaction_id: Optional[str] = None,
-    path: Optional[str] = None,
-    tag: Optional[str] = None,
+    label:  Optional[str] = None,
+    holding_id:  Optional[int] = None,
+    transaction_id:  Optional[str] = None,
+    tag:  Optional[str] = None,
 ):
     # create the message dictionary
-    api_action = f"{RK.FIND}"
+    api_action = f"{RK.LIST}"
     msg_dict = {
         MSG.DETAILS: {
             MSG.USER: user,
@@ -51,7 +50,9 @@ def find_files(
         meta_dict[MSG.HOLDING_ID] = holding_id
     if transaction_id:
         meta_dict[MSG.TRANSACT_ID] = transaction_id
+
     if tag:
+        tag_dict = {}
         # convert the string into a dictionary
         try:
             tag_dict = process_tag(tag)
@@ -59,9 +60,6 @@ def find_files(
             raise ValueError(e)
         else:
             meta_dict[MSG.TAG] = tag_dict
-    if path:
-        meta_dict[MSG.PATH] = path
-        msg_dict[MSG.DETAILS][MSG.PATH] = path
     if len(meta_dict) > 0:
         msg_dict[MSG.META] = meta_dict
 

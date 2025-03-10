@@ -12,11 +12,11 @@ from typing import Optional, Union
 import uuid
 import json
 
-import rabbit.message_keys as MSG
-import rabbit.routing_keys as RK
-from rabbit.state import State
+import nlds_admin.rabbit.message_keys as MSG
+import nlds_admin.rabbit.routing_keys as RK
+from nlds_admin.rabbit.state import State
 
-from rabbit.rpc_publisher import RabbitMQRPCPublisher
+from nlds_admin.rabbit.rpc_publisher import RabbitMQRPCPublisher
 
 def get_request_status(
     rpc_publisher: RabbitMQRPCPublisher,        
