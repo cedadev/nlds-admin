@@ -15,7 +15,7 @@ client provided to users for programmatic or interactive use.
 
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
    :caption: Contents:
 
    command_ref.rst

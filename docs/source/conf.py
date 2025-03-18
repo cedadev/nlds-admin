@@ -34,4 +34,6 @@ html_logo = "_images/nlds.png"
 html_theme_options = {
     'logo_only': False,
     'display_version': True,
+    'collapse_navigation': False,
+    'navigation_depth': 4,
 }
