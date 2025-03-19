@@ -23,26 +23,15 @@ Each command has its own specific options.  The argument is generally the file
 or filelist that the user wishes to operate on.  The full command listing is
 given below.
 
-.. toctree::
-   :maxdepth: 1
-   :caption: Commands
 
-list
-----
 .. click:: nlds_admin.nlds_admin:list
    :prog: list
-   :nested: short
+   :nested: full
 
-
-find
-----
 .. click:: nlds_admin.nlds_admin:find
    :prog: find
-   :nested: short
+   :nested: full
 
-
-stat
-----
 .. click:: nlds_admin.nlds_admin:stat
    :prog: stat
-   :nested: short
+   :nested: full
