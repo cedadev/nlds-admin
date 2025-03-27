@@ -16,7 +16,7 @@ jobs:
     - name: Build HTML
       uses: ammaraskar/sphinx-action@master
       with: 
-        docs-folder: "docs/user_guide"
+        docs-folder: "docs/source"
         # pre-build-command: "mkdir /tmp/sphinx-log"
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
@@ -30,4 +30,4 @@ jobs:
       if: github.ref == 'refs/heads/main'
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: _build/
+        publish_dir: docs/source/_build/
