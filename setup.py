@@ -36,7 +36,7 @@ setup(
     description=("Admin tool for CEDA Near-Line Data Store"),
     long_description=README,
     url="http://www.ceda.ac.uk/",
-    author="Will Cross & Neil Massey",
+    author="William Cross & Neil Massey",
     author_email="neil.massey@stfc.ac.uk",
     classifiers=[
         "Environment :: Web Environment",

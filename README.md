@@ -15,11 +15,11 @@ Instructions are for the development version - subject to change.
 
 3. Install the requirements:
 
-    `pip install -r requirements.txt`
+    `pip install ./`
 
 4. Run the command from the source directory:
 
-    `python3 nlds-admin.py <command> <options>`
+    `nlds-admin <command> <options>`
 
 ## Config file
 

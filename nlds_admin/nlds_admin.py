@@ -97,6 +97,14 @@ def list(
         rpc_publisher.close_connection()
     json_response = jsn.loads(ret)
     response_details = json_response["details"]
+
+    if "failure" in response_details and len(response_details["failure"]) > 0:
+        fail_string = "Failed to list holdings "
+        fail_string += prints.construct_header_string(response_details, time)
+        if response_details["failure"]:
+            fail_string += "\n" + response_details["failure"]
+        raise click.UsageError(fail_string)
+    
     response_data = json_response["data"]["holdings"]
 
     response_data = sorted(
@@ -231,6 +239,14 @@ def find(
         rpc_publisher.close_connection()
     json_response = jsn.loads(ret)
     response_details = json_response["details"]
+
+    if "failure" in response_details and len(response_details["failure"]) > 0:
+        fail_string = "Failed to find files "
+        fail_string += prints.construct_header_string(response_details, time)
+        if response_details["failure"]:
+            fail_string += "\n" + response_details["failure"]
+        raise click.UsageError(fail_string)
+    
     response_data = json_response["data"]["holdings"]
 
     if response_data:
@@ -251,7 +267,6 @@ def find(
         click.echo(json_response)
     else:
         prints.print_action(response_data, response_details, time, simple, url)
-
 
 @nlds_admin.command("stat", help="List transactions.")
 @click.pass_context
