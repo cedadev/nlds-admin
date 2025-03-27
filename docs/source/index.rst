@@ -10,15 +10,29 @@ The Near-Line Data Store (NLDS) is a multi-tiered storage solution that uses
 Object Storage as a front end cache to a tape library. It catalogs the data as 
 it is ingested and permits multiple versions of files. It has a microservice 
 architecture using a message broker to communicate between the parts.
+
 Interaction with NLDS is via a HTTP API, with a Python library and command-line 
 client provided to users for programmatic or interactive use.
+Authentication is carried out for each user using OAuth2.  
+
+Due to this authentication, it is not possible for an administrator to see another 
+user's NLDS jobs by going through either the command-line client or the Python library.
+
+However, due to the interaction with NLDS being passed along a line of message queues,
+with individual worker processes attached to each queue, it is possible to inject a 
+message into a queue that is further along the line than the authentication server, in 
+the form of a Remote-Procedure Call (RPC).  To be authorised to do this, the caller
+of the RPC must have permission to write to the RabbitMQ exchange for NLDS.
 
 
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
 
+   installation.rst
+   config.rst
    command_ref.rst
+   license.rst
 
 
 Acknowledgements
