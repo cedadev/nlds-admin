@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Config file &mdash; Near-Line Data Store Admin 1.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+
+  
+    <link rel="shortcut icon" href="_static/icon-black.png"/>
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=0b546569"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Command Line Reference" href="command_ref.html" />
+    <link rel="prev" title="Installation" href="installation.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Near-Line Data Store Admin
+              <img src="_static/nlds.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                1.0.1
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Config file</a></li>
+<li class="toctree-l1"><a class="reference internal" href="command_ref.html">Command Line Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="command_ref.html#list">list</a></li>
+<li class="toctree-l2"><a class="reference internal" href="command_ref.html#find">find</a></li>
+<li class="toctree-l2"><a class="reference internal" href="command_ref.html#stat">stat</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="license.html">NLDS License</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="license.html#bsd-2-clause-license">BSD 2-Clause License</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Near-Line Data Store Admin</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Config file</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/config.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="config-file">
+<h1>Config file<a class="headerlink" href="#config-file" title="Permalink to this heading"></a></h1>
+<p><code class="docutils literal notranslate"><span class="pre">nlds-admin</span></code> requires a config file, called <code class="docutils literal notranslate"><span class="pre">.config</span></code> in the same source directory
+as the <code class="docutils literal notranslate"><span class="pre">nlds-admin.py</span></code> file.  There is a template for this file in the source
+directory called <code class="docutils literal notranslate"><span class="pre">config-template</span></code>.  To create a valid <code class="docutils literal notranslate"><span class="pre">.config</span></code> file, carry out
+these steps:</p>
+<ol class="arabic">
+<li><p>Copy the <code class="docutils literal notranslate"><span class="pre">config-template</span></code> to <code class="docutils literal notranslate"><span class="pre">.config</span></code></p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">cp</span> <span class="pre">config-template</span> <span class="pre">.config</span></code></p>
+</div></blockquote>
+</li>
+<li><p>Edit <code class="docutils literal notranslate"><span class="pre">.config</span></code> and fill in <code class="docutils literal notranslate"><span class="pre">rabbit_server</span></code>, <code class="docutils literal notranslate"><span class="pre">rabbit_user</span></code>, <code class="docutils literal notranslate"><span class="pre">rabbit_vhost</span></code>, <code class="docutils literal notranslate"><span class="pre">rabbit_password</span></code> in the following sections:</p></li>
+</ol>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;server&quot;</span><span class="p">:</span> <span class="p">{{</span> <span class="n">rabbit_server</span> <span class="p">}},</span>
+<span class="s2">&quot;user&quot;</span><span class="p">:</span><span class="s2">&quot;{{ rabbit_user }}&quot;</span><span class="p">,</span>
+<span class="s2">&quot;vhost&quot;</span><span class="p">:</span><span class="s2">&quot;{{ rabbit_vhost }}&quot;</span><span class="p">,</span>
+<span class="s2">&quot;password&quot;</span><span class="p">:</span><span class="s2">&quot;{{ rabbit_password }}&quot;</span>
+</pre></div>
+</div>
+<ol class="arabic simple">
+<li><p>Only JASMIN administrators have this information, as this tool is designed to be used only by JASMIN admins.  Ask Neil, Danny or Chami for this information.</p></li>
+</ol>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="installation.html" class="btn btn-neutral float-left" title="Installation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="command_ref.html" class="btn btn-neutral float-right" title="Command Line Reference" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Centre for Environmental Data Analysis, Science and Technologies Facilities Council, UK Research and Innovation.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>  
+
+  <style>
+    /* Sidebar header (and topbar for mobile) */
+    .wy-side-nav-search, .wy-nav-top {
+      background: #A6C36F;
+    }
+
+    .caption-text {
+        color: #828C51
+    }
+
+    .wy-nav-side {
+        background: #1E352F;
+    }
+
+    a {
+        color: #828C51
+    }
+
+    .note {
+        background: #BEEF9E
+    }
+    .admonition-title {
+        background: #335145
+    }
+
+  </style>
+
+
+</body>
+</html>

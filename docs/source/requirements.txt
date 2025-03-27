@@ -1,4 +1,0 @@
-Sphinx==7.1.2
-sphinx-click==5.1.0
-sphinx-rtd-theme==2.0.0
--r ../../requirements.txt
