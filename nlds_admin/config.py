@@ -11,7 +11,7 @@ __contact__ = "neil.massey@stfc.ac.uk"
 import json
 import os.path
 
-CONFIG_FILE_LOCATION = "./.config"
+CONFIG_FILE_LOCATION = "~/.nlds-admin-config"
 # Config file section strings
 AUTH_CONFIG_SECTION = "authentication"
 
@@ -76,7 +76,7 @@ def load_config(config_file_path: str = CONFIG_FILE_LOCATION) -> dict:
     # Location of config file is ./.server_config.  Open it, checking that it
     # exists as well.
     try:
-        fh = open(os.path.abspath(f"{config_file_path}"))
+        fh = open(os.path.expanduser(f"{config_file_path}"))
     except FileNotFoundError:
         raise FileNotFoundError(
             f"{config_file_path}", "The config file cannot be found."
