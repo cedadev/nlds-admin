@@ -165,7 +165,7 @@ def print_single_list(response: dict):
     click.echo(f"{'':<4}{'group':<16}: {h['group']}")
     click.echo(f"{'':<4}{'id':<16}: {h['id']}")
     click.echo(f"{'':<4}{'label':<16}: {h['label']}")
-    click.echo(f"{'':<4}{'ingest time':<16}: {h['date'].replace('T',' ')}")
+    click.echo(f"{'':<4}{'ingest time':<16}: {h['date'].replace('T',' ')[0:19]}")
     if "transactions" in h:
         trans_str = ""
         for t in h["transactions"]:
@@ -179,7 +179,7 @@ def print_single_list(response: dict):
 def print_multi_list(response: dict):
     for h in response:
         click.echo(
-            f"{'':<4}{h['user']:<16}{h['id']:<6}{h['label']:<16}{h['date'].replace('T',' '):<32}"
+            f"{'':<4}{h['user']:<16}{h['id']:<6}{h['label']:<16}{h['date'].replace('T',' ')[0:19]:<32}"
         )
 
 
@@ -207,7 +207,7 @@ def print_single_file(response, print_url=False):
                     f"{'':<4}{'permissions':<16}: "
                     f"{integer_permissions_to_string(f['permissions'])}"
                 )
-                click.echo(f"{'':<4}{'ingest time':<16}: {time}")
+                click.echo(f"{'':<4}{'ingest time':<16}: {time[0:19]}")
                 # locations
                 stls = " "
                 url = _get_url_from_file(f)
@@ -311,7 +311,7 @@ def print_multi_stat(response: dict):
         click.echo(
             f"{'':<4}{tr['user']:<16}{tr['id']:<12}{tr['api_action']:<16}"
             f"{job_label:16}{label:16}"
-            f"{state:<23}{time:<20}"
+            f"{state:<23}{time[0:19]:<20}"
         )
 
 

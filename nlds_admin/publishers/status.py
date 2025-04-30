@@ -28,7 +28,11 @@ def get_request_status(
     job_label: Optional[str] = None,
     state: Optional[Union[int, str]] = None,
     sub_id: Optional[str] = None,
-    api_action: Optional[str] = None
+    api_action: Optional[str] = None,
+    query_user: Optional[str] = None,
+    query_group: Optional[str] = None,
+    limit: Optional[int] = None,
+    descending: Optional[bool] = False,
 ):
     # create the message dictionary
     api_action = f"{RK.STAT}"
@@ -64,7 +68,7 @@ def get_request_status(
         except ValueError:
             msg="Given sub_id not a valid uuid-4."
             raise RuntimeError(msg)
-
+    
     # Assemble message ready for RCP call
     msg_dict = {
         MSG.DETAILS: {
@@ -77,11 +81,15 @@ def get_request_status(
             MSG.JOB_LABEL: job_label,
             MSG.STATE: state,
             MSG.SUB_ID: sub_id,
-            MSG.USER_QUERY: user,
-            MSG.GROUP_QUERY: group,
+            MSG.USER_QUERY: query_user,
+            MSG.GROUP_QUERY: query_group,
             MSG.API_ACTION: api_action,
         },
         MSG.DATA: {},
+        MSG.META: {
+            MSG.LIMIT: limit,
+            MSG.DESCENDING: descending,
+        },
         MSG.TYPE: MSG.TYPE_STANDARD,
     }
 

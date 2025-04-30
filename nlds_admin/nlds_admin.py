@@ -84,14 +84,14 @@ def list(
     rpc_publisher = ctx.obj
     try:
         ret = list_holdings(
-            rpc_publisher,
-            user,
-            group,
-            groupall,
-            label,
-            holding_id,
-            transaction_id,
-            tag,
+            rpc_publisher=rpc_publisher,
+            user=user,
+            group=group,
+            groupall=groupall,
+            label=label,
+            holding_id=holding_id,
+            transaction_id=transaction_id,
+            tag=tag,
         )
     finally:
         rpc_publisher.close_connection()
@@ -225,15 +225,15 @@ def find(
     rpc_publisher = ctx.obj
     try:
         ret = find_files(
-            rpc_publisher,
-            user,
-            group,
-            groupall,
-            label,
-            holding_id,
-            transaction_id,
-            path,
-            tag,
+            rpc_publisher=rpc_publisher,
+            user=user,
+            group=group,
+            groupall=groupall,
+            label=label,
+            holding_id=holding_id,
+            transaction_id=transaction_id,
+            path=path,
+            tag=tag,
         )
     finally:
         rpc_publisher.close_connection()
@@ -336,6 +336,13 @@ def find(
     "put | getlist | putlist",
 )
 @click.option(
+    "-L",
+    "--limit",
+    default = None,
+    type=int,
+    help="Limit the number of transactions to list"
+)
+@click.option(
     "-j",
     "--json",
     default=False,
@@ -347,7 +354,7 @@ def find(
     "-d/-a",
     "--descending/--ascending",
     "time",
-    default=False,
+    default=True,
     help="Switch between ascending and descending time order.",
 )
 def stat(
@@ -361,27 +368,27 @@ def stat(
     state,
     sub_id,
     api_action,
+    limit,
     json,
     time,
 ):
-    if not (group and (user or groupall)):
-        raise click.UsageError(
-            "Could not stat requests: user and group must be supplied, or group plus "
-            "`groupall` flag."
-        )
     rpc_publisher = ctx.obj
     try:
         ret = get_request_status(
-            rpc_publisher,
-            user,
-            group,
-            groupall,
-            id,
-            transaction_id,
-            job_label,
-            state,
-            sub_id,
-            api_action,
+            rpc_publisher=rpc_publisher,
+            user='nlds',
+            group='',
+            groupall=groupall,
+            id=id,
+            transaction_id=transaction_id,
+            job_label=job_label,
+            state=state,
+            sub_id=sub_id,
+            api_action=api_action,
+            query_user=user,
+            query_group=group,
+            limit=limit,
+            descending=time,
         )
     finally:
         rpc_publisher.close_connection()
