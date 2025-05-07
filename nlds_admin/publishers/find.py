@@ -26,6 +26,10 @@ def find_files(
     transaction_id: Optional[str] = None,
     path: Optional[str] = None,
     tag: Optional[str] = None,
+    query_user: Optional[str] = None,
+    query_group: Optional[str] = None,
+    limit: Optional[int] = None,
+    descending: Optional[bool] = False,
 ):
     # create the message dictionary
     api_action = f"{RK.FIND}"
@@ -39,6 +43,8 @@ def find_files(
             MSG.TRANSACT_ID: transaction_id,
             MSG.API_ACTION: api_action,
             MSG.TAG: {},
+            MSG.USER_QUERY: query_user,
+            MSG.GROUP_QUERY: query_group,
         },
         MSG.DATA: {},
         MSG.TYPE: MSG.TYPE_STANDARD,
@@ -62,6 +68,10 @@ def find_files(
     if path:
         meta_dict[MSG.PATH] = path
         msg_dict[MSG.DETAILS][MSG.PATH] = path
+    if limit:
+        meta_dict[MSG.LIMIT] = limit
+    if descending:
+        meta_dict[MSG.DESCENDING] = descending
     if len(meta_dict) > 0:
         msg_dict[MSG.META] = meta_dict
 

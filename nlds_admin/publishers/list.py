@@ -24,10 +24,13 @@ def list_holdings(
     label:  Optional[str] = None,
     holding_id:  Optional[int] = None,
     transaction_id:  Optional[str] = None,
-    tag:  Optional[str] = None,
+    tag:  Optional[str] = {},
+    query_user: Optional[str] = None,
+    query_group: Optional[str] = None,
+    limit: Optional[int] = None,
+    time: Optional[bool] = None,
 ):
     # create the message dictionary
-    api_action = f"{RK.LIST}"
     msg_dict = {
         MSG.DETAILS: {
             MSG.USER: user,
@@ -36,10 +39,16 @@ def list_holdings(
             MSG.LABEL: label,
             MSG.HOLDING_ID: holding_id,
             MSG.TRANSACT_ID: transaction_id,
-            MSG.API_ACTION: api_action,
-            MSG.TAG: {},
+            MSG.API_ACTION: RK.LIST,
+            MSG.TAG: tag,
+            MSG.USER_QUERY: query_user,
+            MSG.GROUP_QUERY: query_group,
         },
         MSG.DATA: {},
+        MSG.META: {
+            MSG.LIMIT: limit,
+            MSG.DESCENDING: time,
+        },
         MSG.TYPE: MSG.TYPE_STANDARD,
     }
     # add the metadata

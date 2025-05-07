@@ -34,9 +34,6 @@ def get_request_status(
     limit: Optional[int] = None,
     descending: Optional[bool] = False,
 ):
-    # create the message dictionary
-    api_action = f"{RK.STAT}"
-
     # Validate state at this point.
     if state is not None:
         # Attempt to convert to int, if can't then put in upper case for name
@@ -76,19 +73,19 @@ def get_request_status(
             MSG.GROUP: group,
             MSG.GROUPALL: groupall,
             MSG.ID: id,
-            MSG.API_ACTION: api_action,
+            MSG.API_ACTION: RK.STAT,
             MSG.TRANSACT_ID: transaction_id,
             MSG.JOB_LABEL: job_label,
             MSG.STATE: state,
             MSG.SUB_ID: sub_id,
             MSG.USER_QUERY: query_user,
             MSG.GROUP_QUERY: query_group,
-            MSG.API_ACTION: api_action,
         },
         MSG.DATA: {},
         MSG.META: {
             MSG.LIMIT: limit,
             MSG.DESCENDING: descending,
+            MSG.API_ACTION: api_action,
         },
         MSG.TYPE: MSG.TYPE_STANDARD,
     }

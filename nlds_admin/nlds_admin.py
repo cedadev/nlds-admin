@@ -67,56 +67,68 @@ def nlds_admin(ctx):
     "-j", "--json", default=False, is_flag=True, help="Output the result as JSON."
 )
 @click.option(
-    "-d/-a",
+    "-L", "--limit", default=None, type=int, help="Limit the number of holdings to list"
+)
+@click.option(
+    "-9/-0",
     "--descending/--ascending",
     "time",
     default=False,
     help="Switch between ascending and descending time order.",
 )
 def list(
-    ctx, user, group, groupall, label, holding_id, transaction_id, tag, json, time
+    ctx,
+    user,
+    group,
+    groupall,
+    label,
+    holding_id,
+    transaction_id,
+    tag,
+    json,
+    limit,
+    time,
 ):
-    if not (group and (user or groupall)):
-        raise click.UsageError(
-            "Could not list holdings: user and group must be supplied, or group plus "
-            "`groupall` flag."
-        )
     rpc_publisher = ctx.obj
     try:
         ret = list_holdings(
             rpc_publisher=rpc_publisher,
-            user=user,
-            group=group,
+            user="nlds",
+            group="",
             groupall=groupall,
             label=label,
             holding_id=holding_id,
             transaction_id=transaction_id,
             tag=tag,
+            query_user=user,
+            query_group=group,
+            limit=limit,
+            time=time,
         )
     finally:
         rpc_publisher.close_connection()
     json_response = jsn.loads(ret)
     response_details = json_response["details"]
+    if "meta" in json_response:
+        response_meta = json_response["meta"]
+    else:
+        response_meta = {}
 
     if "failure" in response_details and len(response_details["failure"]) > 0:
         fail_string = "Failed to list holdings "
-        fail_string += prints.construct_header_string(response_details, time)
+        fail_string += prints.construct_header_string(
+            response_details, response_meta, time
+        )
         if response_details["failure"]:
             fail_string += "\n" + response_details["failure"]
         raise click.UsageError(fail_string)
-    
-    response_data = json_response["data"]["holdings"]
 
-    response_data = sorted(
-        response_data,
-        key=lambda x: datetime.strptime(x["date"], "%Y-%m-%dT%H:%M:%S.%f"),
-        reverse=time,
-    )
+    response_data = json_response["data"]["holdings"]
 
     if json:
         click.echo(json_response)
     else:
-        prints.print_action(response_data, response_details, time)
+        prints.print_action(response_data, response_details, response_meta, time)
 
 
 @nlds_admin.command("find", help="Find and list files.")
@@ -195,7 +207,10 @@ def list(
     help="Output the URL for the file on the object storage.",
 )
 @click.option(
-    "-d/-a",
+    "-L", "--limit", default=None, type=int, help="Limit the number of files to list"
+)
+@click.option(
+    "-9/-0",
     "--descending/--ascending",
     "time",
     default=False,
@@ -214,59 +229,53 @@ def find(
     json,
     simple,
     url,
+    limit,
     time,
 ):
-    if not (group and (user or groupall)):
-        raise click.UsageError(
-            "Could not find files: user and group must be supplied, or group plus "
-            "`groupall` flag."
-        )
-
     rpc_publisher = ctx.obj
     try:
         ret = find_files(
             rpc_publisher=rpc_publisher,
-            user=user,
-            group=group,
+            user="nlds",
+            group="",
             groupall=groupall,
             label=label,
             holding_id=holding_id,
             transaction_id=transaction_id,
             path=path,
             tag=tag,
+            query_user=user,
+            query_group=group,
+            limit=limit,
+            descending=time,
         )
     finally:
         rpc_publisher.close_connection()
     json_response = jsn.loads(ret)
     response_details = json_response["details"]
+    if "meta" in json_response:
+        response_meta = json_response["meta"]
+    else:
+        response_meta = {}
 
     if "failure" in response_details and len(response_details["failure"]) > 0:
         fail_string = "Failed to find files "
-        fail_string += prints.construct_header_string(response_details, time)
+        fail_string += prints.construct_header_string(
+            response_details, response_meta, time, simple, url
+        )
         if response_details["failure"]:
             fail_string += "\n" + response_details["failure"]
         raise click.UsageError(fail_string)
-    
-    response_data = json_response["data"]["holdings"]
 
-    if response_data:
-        response_data = dict(
-            sorted(
-                response_data.items(),
-                key=lambda x: datetime.strptime(
-                    x[1]["transactions"][next(iter(x[1]["transactions"]))][
-                        "ingest_time"
-                    ],
-                    "%Y-%m-%dT%H:%M:%S.%f",
-                ),
-                reverse=time,
-            )
-        )
+    response_data = json_response["data"]["holdings"]
 
     if json:
         click.echo(json_response)
     else:
-        prints.print_action(response_data, response_details, time, simple, url)
+        prints.print_action(
+            response_data, response_details, response_meta, time, simple, url
+        )
+
 
 @nlds_admin.command("stat", help="List transactions.")
 @click.pass_context
@@ -336,13 +345,6 @@ def find(
     "put | getlist | putlist",
 )
 @click.option(
-    "-L",
-    "--limit",
-    default = None,
-    type=int,
-    help="Limit the number of transactions to list"
-)
-@click.option(
     "-j",
     "--json",
     default=False,
@@ -351,7 +353,14 @@ def find(
     help="Output the result as JSON.",
 )
 @click.option(
-    "-d/-a",
+    "-L",
+    "--limit",
+    default=None,
+    type=int,
+    help="Limit the number of transactions to list",
+)
+@click.option(
+    "-9/-0",
     "--descending/--ascending",
     "time",
     default=True,
@@ -368,16 +377,16 @@ def stat(
     state,
     sub_id,
     api_action,
-    limit,
     json,
+    limit,
     time,
 ):
     rpc_publisher = ctx.obj
     try:
         ret = get_request_status(
             rpc_publisher=rpc_publisher,
-            user='nlds',
-            group='',
+            user="nlds",
+            group="",
             groupall=groupall,
             id=id,
             transaction_id=transaction_id,
@@ -395,18 +404,13 @@ def stat(
     json_response = jsn.loads(ret)
     response_details = json_response["details"]
     response_data = json_response["data"]
-
-    response_data["records"] = sorted(
-        response_data["records"],
-        key=lambda x: datetime.strptime(x["creation_time"], "%Y-%m-%dT%H:%M:%S.%f"),
-        reverse=time,
-    )
+    response_meta = json_response["meta"]
     response_data = response_data["records"]
 
     if json:
         click.echo(json_response)
     else:
-        prints.print_action(response_data, response_details, time)
+        prints.print_action(response_data, response_details, response_meta, time)
 
 
 def main():

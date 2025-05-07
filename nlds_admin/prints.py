@@ -179,7 +179,8 @@ def print_single_list(response: dict):
 def print_multi_list(response: dict):
     for h in response:
         click.echo(
-            f"{'':<4}{h['user']:<16}{h['id']:<6}{h['label']:<16}{h['date'].replace('T',' ')[0:19]:<32}"
+            f"{'':<4}{h['user']:<16}{h['group']:<16}"
+            f"{h['id']:<6}{h['label']:<32}{h['date'].replace('T',' ')[0:19]:<32}"
         )
 
 
@@ -309,23 +310,28 @@ def print_multi_stat(response: dict):
         else:
             job_label = ""  # tr['transaction_id'][0:8]
         click.echo(
-            f"{'':<4}{tr['user']:<16}{tr['id']:<12}{tr['api_action']:<16}"
-            f"{job_label:16}{label:16}"
+            f"{'':<4}{tr['user']:<16}{tr['group']:<16}{tr['id']:<12}"
+            f"{tr['api_action']:<16}{job_label:16}{label:16}"
             f"{state:<23}{time[0:19]:<20}"
         )
 
 
-def construct_header_string(details, time, simple=False, url=False):
+def construct_header_string(details, meta, time, simple=False, url=False):
     """
     Constructs a string based on the inputs and prints the response.
     """
     header = []
 
-    if details.get("groupall"):
+    if details.get("user_query"):
+        header.append(f"user: {details['user_query']}")
+    elif details.get("groupall") or details["user"] == "nlds":
         header.append("All users")
     else:
         header.append(f"user: {details['user']}")
-    header.append(f"group: {details['group']}")
+
+    if details.get("group"):
+        header.append(f"group: {details['group']}")
+
     if simple:
         header.append("simple view")
     elif url:
@@ -350,6 +356,8 @@ def construct_header_string(details, time, simple=False, url=False):
         header.append(f"tag: {details['tag']}")
     if details.get("path"):
         header.append(f"path: {details['path']}")
+    if meta.get("api_action"):
+        header.append(f"api action: {meta['api_action']}")
 
     req_details = ", ".join(header)
 
@@ -366,9 +374,9 @@ def print_table_headers(api_action):
     """
     Prints table headers for multi-holding cases.
     """
-    common = f"{'':<4}{'user':<16}"
+    common = f"{'':<4}{'user':<16}{'group':<16}"
     headers = {
-        "list": f"{common}{'id':<6}{'label':<16}{'ingest time':<32}",
+        "list": f"{common}{'id':<6}{'label':<32}{'ingest time':<32}",
         "find": f"{common}{'h-id':<6}{'h-label':<16}{'size':<8}{'date':<12}{'path'}",
         "stat": (
             f"{common}{'id':<12}{'action':<16}{'job label':<16}"
@@ -378,8 +386,8 @@ def print_table_headers(api_action):
     click.echo(headers.get(api_action, ""))
 
 
-def print_action(response: dict, req_details, time, simple=False, url=None):
-    header = construct_header_string(req_details, time)
+def print_action(response: dict, req_details, req_meta, time, simple=False, url=None):
+    header = construct_header_string(req_details, req_meta, time)
     api_action = req_details["api_action"]
 
     if simple:
