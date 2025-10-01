@@ -310,9 +310,9 @@ def print_multi_stat(response: dict):
         else:
             job_label = ""  # tr['transaction_id'][0:8]
         click.echo(
-            f"{'':<4}{tr['user']:<16}{tr['group']:<16}{tr['id']:<12}"
-            f"{tr['api_action']:<16}{job_label:16}{label:16}"
-            f"{state:<23}{time[0:19]:<20}"
+            f"{'':<4}{tr['user'][:15]:<16}{tr['group'][:15]:<16}"
+            f"{str(tr['id'])[:11]:<12}{tr['api_action'][:15]:<16}{job_label[:15]:16}"
+            f"{label[:15]:16}{state[:22]:<23}{time[:19]:<20}"
         )
 
 

@@ -53,6 +53,7 @@ setup(
         "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
     ],
     entry_points = {
-        'console_scripts': ['nlds-admin=nlds_admin.nlds_admin:main'],
+        'console_scripts': ['nlds-admin=nlds_admin.nlds_admin:main',
+                            'nlds-qm=nlds_admin.nlds_qm:main'],
     }
 )
