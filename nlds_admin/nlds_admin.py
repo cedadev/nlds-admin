@@ -1,5 +1,4 @@
 import click
-from datetime import datetime
 
 from nlds_admin.rabbit.rpc_publisher import RabbitMQRPCPublisher
 from nlds_admin.publishers.list import list_holdings
