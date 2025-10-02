@@ -195,6 +195,8 @@ def dump(queue, number, target, length, compress=False):
     for n in range(0, number):
         method, properties, body = consumer.consume_one_message()
         body_json = json.loads(body)
+        # get the routing key
+        rk = method.routing_key
         # the message consists of the DETAILS and the DATA part
         details = body_json[MSG.DETAILS]
         # get the transaction_id
@@ -206,7 +208,7 @@ def dump(queue, number, target, length, compress=False):
 
         # if the message is compressed then decompress it
         if MSG.COMPRESS in details and details[MSG.COMPRESS]:
-            data = decompress_data[MSG.DATA]
+            data = decompress_data(body_json[MSG.DATA])
         else:
             data = body_json[MSG.DATA]
         # get a list of files and split it
@@ -231,6 +233,8 @@ def dump(queue, number, target, length, compress=False):
             )
             # reform the dictionary
             details[MSG.SUB_ID] = str(sub_id)
+            # record the routing key
+            details["routing_key"] = rk
             data[MSG.FILELIST] = f
             if compress:
                 comp_data = compress_data(data)
