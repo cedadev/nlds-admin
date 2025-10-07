@@ -10,11 +10,11 @@ __contact__ = "neil.massey@stfc.ac.uk"
 
 from typing import Optional, Union
 import uuid
-import json
 
 import nlds_admin.rabbit.message_keys as MSG
 import nlds_admin.rabbit.routing_keys as RK
 from nlds_admin.rabbit.state import State
+from nlds_admin.deserialize import deserialize
 
 from nlds_admin.rabbit.rpc_publisher import RabbitMQRPCPublisher
 
@@ -96,7 +96,7 @@ def get_request_status(
     # Check if response is valid or whether t   he request timed out
     if response is not None:
         # convert byte response to dict for label fetching
-        response_dict = json.loads(response)
+        response_dict = deserialize(response)
         # Attempt to get list of transaction records
         transaction_records = None
         try:

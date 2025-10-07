@@ -93,6 +93,7 @@ def get_transaction_state(transaction: dict):
         FAILED = 101
         COMPLETE_WITH_ERRORS = 102
         COMPLETE_WITH_WARNINGS = 103
+        SPLIT = 110
         SEARCHING = 1000
     The overall state is the minimum of these
     """
@@ -118,6 +119,7 @@ def get_transaction_state(transaction: dict):
         "FAILED": 101,
         "COMPLETE_WITH_ERRORS": 102,
         "COMPLETE_WITH_WARNINGS": 103,
+        "SPLIT": 110,
         "SEARCHING": 1000,
     }
     state_mapping_reverse = {v: k for k, v in state_mapping.items()}
