@@ -5,10 +5,8 @@ from nlds_admin.publishers.list import list_holdings
 from nlds_admin.publishers.find import find_files
 from nlds_admin.publishers.status import get_request_status
 
-import json as jsn
-
 from nlds_admin import prints
-
+from nlds_admin.deserialize import deserialize
 
 @click.group()
 @click.pass_context
@@ -106,7 +104,7 @@ def list(
         )
     finally:
         rpc_publisher.close_connection()
-    json_response = jsn.loads(ret)
+    json_response = deserialize(ret)
     response_details = json_response["details"]
     if "meta" in json_response:
         response_meta = json_response["meta"]
@@ -250,7 +248,7 @@ def find(
         )
     finally:
         rpc_publisher.close_connection()
-    json_response = jsn.loads(ret)
+    json_response = deserialize(ret)
     response_details = json_response["details"]
     if "meta" in json_response:
         response_meta = json_response["meta"]
@@ -400,7 +398,7 @@ def stat(
         )
     finally:
         rpc_publisher.close_connection()
-    json_response = jsn.loads(ret)
+    json_response = deserialize(ret)
     response_details = json_response["details"]
     response_data = json_response["data"]
     response_meta = json_response["meta"]

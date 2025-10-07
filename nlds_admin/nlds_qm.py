@@ -195,7 +195,7 @@ def dump(queue, number, target, length, compress=False):
     for n in range(0, number):
         method, properties, body = consumer.consume_one_message()
         body_json = json.loads(body)
-        # Get the routing key
+        # get the routing key
         rk = method.routing_key
         # the message consists of the DETAILS and the DATA part
         details = body_json[MSG.DETAILS]
@@ -233,6 +233,7 @@ def dump(queue, number, target, length, compress=False):
             )
             # reform the dictionary
             details[MSG.SUB_ID] = str(sub_id)
+            # record the routing key
             details["routing_key"] = rk
             data[MSG.FILELIST] = f
             if compress:
