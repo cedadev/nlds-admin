@@ -124,7 +124,7 @@ def get_transaction_state(transaction: dict):
     }
     state_mapping_reverse = {v: k for k, v in state_mapping.items()}
 
-    min_state = 200
+    min_state = 1000
     min_time = datetime(1970, 1, 1)
     error_count = 0
     for sr in transaction["sub_records"]:
@@ -137,8 +137,9 @@ def get_transaction_state(transaction: dict):
         if sr_state == "FAILED":
             error_count += 1
 
-    if min_state == 200:
-        return None, None
+    if min_state == 1000:
+        d = datetime.fromisoformat(transaction["creation_time"])
+        return "QUEUED", d
 
     if min_state == state_mapping["COMPLETE"] and error_count > 0:
         min_state = state_mapping["COMPLETE_WITH_ERRORS"]
@@ -346,7 +347,7 @@ def construct_header_string(details, meta, time, simple=False, url=False):
     if details.get("job_label"):
         header.append(f"job_label: {details['job_label']}")
     if details.get("state"):
-        state = State(details["state"]).name
+        state = ", ".join(details["state"])
         header.append(f"state: {state}")
     if details.get("sub_id"):
         header.append(f"sub_id: {details['sub_id']}")
@@ -359,7 +360,8 @@ def construct_header_string(details, meta, time, simple=False, url=False):
     if details.get("path"):
         header.append(f"path: {details['path']}")
     if meta.get("api_action"):
-        header.append(f"api action: {meta['api_action']}")
+        api_action = ", ".join(meta['api_action'])
+        header.append(f"api action: {api_action}")
 
     req_details = ", ".join(header)
 

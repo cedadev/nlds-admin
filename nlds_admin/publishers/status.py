@@ -26,29 +26,30 @@ def get_request_status(
     id: Optional[int] = None,
     transaction_id: Optional[str] = None,
     job_label: Optional[str] = None,
-    state: Optional[Union[int, str]] = None,
+    state: Optional[list[str]] = None,
     sub_id: Optional[str] = None,
-    api_action: Optional[str] = None,
+    api_action: Optional[list[str]] = None,
+    exclude_api_action: Optional[list[str]] = None,
     query_user: Optional[str] = None,
     query_group: Optional[str] = None,
     limit: Optional[int] = None,
     descending: Optional[bool] = False,
 ):
     # Validate state at this point.
-    if state is not None:
+    for s in state:
         # Attempt to convert to int, if can't then put in upper case for name
         # comparison
         try:
-            state = int(state)
+            s = int(s)
         except (ValueError, TypeError):
-            state = state.upper()
+            s = s.upper()
 
-        if State.has_name(state):
-            state = State[state].value
-        elif State.has_value(state):
-            state = State(state).value
+        if State.has_name(s):
+            s = State[s].value
+        elif State.has_value(s):
+            s = State(s).value
         else:
-            msg="Given State not valid."
+            msg=f"Given State {s} not valid."
             raise RuntimeError(msg)
 
     # Validate transaction_id is a valid uuid
@@ -65,7 +66,7 @@ def get_request_status(
         except ValueError:
             msg="Given sub_id not a valid uuid-4."
             raise RuntimeError(msg)
-    
+
     # Assemble message ready for RCP call
     msg_dict = {
         MSG.DETAILS: {
@@ -76,7 +77,6 @@ def get_request_status(
             MSG.API_ACTION: RK.STAT,
             MSG.TRANSACT_ID: transaction_id,
             MSG.JOB_LABEL: job_label,
-            MSG.STATE: state,
             MSG.SUB_ID: sub_id,
             MSG.USER_QUERY: query_user,
             MSG.GROUP_QUERY: query_group,
@@ -85,10 +85,15 @@ def get_request_status(
         MSG.META: {
             MSG.LIMIT: limit,
             MSG.DESCENDING: descending,
-            MSG.API_ACTION: api_action,
         },
         MSG.TYPE: MSG.TYPE_STANDARD,
     }
+    if len(api_action) > 0:
+        msg_dict[MSG.META][MSG.API_ACTION] = api_action
+    if len(exclude_api_action) > 0:
+        msg_dict[MSG.META][MSG.EXCLUDE_API_ACTION] = exclude_api_action
+    if len(state) > 0:
+        msg_dict[MSG.META][MSG.STATE] = state
 
     # call RPC function
     routing_key = "monitor_q"

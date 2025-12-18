@@ -136,7 +136,7 @@ def print_details(details, data, rk):
     "--number",
     default=1,
     type=int,
-    help="Number of messages in queue to retrieve then split.",
+    help="Number of messages in queue to list.",
 )
 def list(queue, number):
     # consume a message off the queues and interpret as JSON
@@ -295,8 +295,7 @@ def load(queue, transact_id, target, compress=False):
 
 
 def main():
-    nlds_qm(prog_name="nlds-admin")
-
+    nlds_qm(prog_name="nlds-qm")
 
 if __name__ == "__main__":
     nlds_qm()

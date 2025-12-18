@@ -91,7 +91,7 @@ def list(
         ret = list_holdings(
             rpc_publisher=rpc_publisher,
             user="nlds",
-            group="",
+            group="**all**",
             groupall=groupall,
             label=label,
             holding_id=holding_id,
@@ -234,7 +234,7 @@ def find(
         ret = find_files(
             rpc_publisher=rpc_publisher,
             user="nlds",
-            group="",
+            group="**all**",
             groupall=groupall,
             label=label,
             holding_id=holding_id,
@@ -319,6 +319,7 @@ def find(
     "--state",
     default=None,
     type=str,
+    multiple=True,
     help="The state of the transactions to list.  Options: "
     "INITIALISING | ROUTING | SPLITTING | INDEXING | "
     "CATALOG_PUTTING | TRANSFER_PUTTING | CATLOG_ROLLBACK | "
@@ -338,8 +339,20 @@ def find(
     "--api_action",
     default=None,
     type=str,
+    multiple=True,
     help="The api action of the transactions to list. Options: get | "
-    "put | getlist | putlist",
+    "put | getlist | putlist | archive-put.  More than one can be specified, e.g."
+    "-a get -a getlist.",
+)
+@click.option(
+    "-c",
+    "--exclude_api_action",
+    default=None,
+    type=str,
+    multiple=True,
+    help="The api action of the transactions to exclude. Options: "
+    "get | put | getlist | putlist | archive-put. More than one can be specified, e.g. "
+    "-c get -c getlist.",
 )
 @click.option(
     "-j",
@@ -374,23 +387,28 @@ def stat(
     state,
     sub_id,
     api_action,
+    exclude_api_action,
     json,
     limit,
     time,
 ):
     rpc_publisher = ctx.obj
+    api_action_list = [a for a in api_action]
+    state_list = [s for s in state]
+    exclude_api_action_list = [x for x in exclude_api_action]
     try:
         ret = get_request_status(
             rpc_publisher=rpc_publisher,
             user="nlds",
-            group="",
+            group="**all**",
             groupall=groupall,
             id=id,
             transaction_id=transaction_id,
             job_label=job_label,
-            state=state,
+            state=state_list,
             sub_id=sub_id,
-            api_action=api_action,
+            api_action=api_action_list,
+            exclude_api_action=exclude_api_action_list,
             query_user=user,
             query_group=group,
             limit=limit,
