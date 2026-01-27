@@ -144,6 +144,7 @@ def list(queue, number):
     click.echo(
         f"{'user':<16}{'group':<12}{'transaction_id':<38}{'sub_id':<38}{'rk':<32}{'N files':>10}"
     )
+    delivery_tags = []
     for n in range(0, number):
         method, properties, body = consumer.consume_one_message()
         # get the routing key from the method
@@ -153,8 +154,40 @@ def list(queue, number):
         details = body_json[MSG.DETAILS]
         data = body_json[MSG.DATA]
         print_details(details, data, rk)
-        consumer.channel.basic_nack(method.delivery_tag)
+        delivery_tags.append(method.delivery_tag)
+        consumer.channel.basic_nack(delivery_tags[n])
 
+@nlds_qm.command("pop", help="pop a message off the front of the queue")
+@click.option(
+    "-q", "--queue", default="", type=str, help="Queue name to list messages for."
+)
+@click.option(
+    "-a", "--ack", default=False, type=bool, is_flag=True
+)
+@click.option(
+    "-n", "--nack", default=False, type=bool, is_flag=True
+)
+
+def pop(queue, ack, nack):
+    consumer = RabbitMQConsumer(queue)
+    method, properties, body = consumer.consume_one_message()
+    rk = method.routing_key
+    body_json = json.loads(body)
+    details = body_json[MSG.DETAILS]
+    data = body_json[MSG.DATA]
+
+    click.echo(
+        f"{'user':<16}{'group':<12}{'transaction_id':<38}{'sub_id':<38}{'rk':<32}{'N files':>10}"
+    )
+    print_details(details, data, rk)
+
+    if ack:
+        consumer.channel.basic_ack(method.delivery_tag)
+        print("... acked")
+
+    if nack:
+        consumer.channel.basic_nack(method.delivery_tag)
+        print("... nacked")
 
 @nlds_qm.command("dump", help="dump messages.")
 @click.option(
