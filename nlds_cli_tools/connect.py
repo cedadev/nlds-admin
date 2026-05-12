@@ -2,6 +2,7 @@ from nlds_processors.catalog.catalog import Catalog
 from nlds_processors.monitor.monitor import Monitor
 import nlds.server_config as CFG
 from nlds.nlds_setup import CONFIG_FILE_LOCATION
+import nlds_admin.rabbit.routing_keys as RK
 
 from sqlalchemy import text
 
@@ -10,11 +11,12 @@ import time
 
 import os
 
+
 def connect_to_monitor(settings: str = CONFIG_FILE_LOCATION):
     """Connects to the monitor database"""
     config = CFG.load_config(settings)
-    db_engine = config["monitor_q"]["db_engine"]
-    db_options = config["monitor_q"]["db_options"]
+    db_engine = config[RK.MONITOR_Q]["db_engine"]
+    db_options = config[RK.MONITOR_Q]["db_options"]
     db_options["echo"] = False
 
     nlds_monitor = Monitor(db_engine=db_engine, db_options=db_options)
@@ -25,8 +27,8 @@ def connect_to_monitor(settings: str = CONFIG_FILE_LOCATION):
 def connect_to_catalog(settings: str = CONFIG_FILE_LOCATION):
     config = CFG.load_config(settings)
 
-    db_engine = config["catalog_q"]["db_engine"]
-    db_options = config["catalog_q"]["db_options"]
+    db_engine = config[RK.CATALOG_Q]["db_engine"]
+    db_options = config[RK.CATALOG_Q]["db_options"]
     db_options["echo"] = False
     nlds_cat = Catalog(db_engine=db_engine, db_options=db_options)
     nlds_cat.connect(create_db_fl=False)
@@ -48,6 +50,7 @@ def connect_to_s3(settings: str = CONFIG_FILE_LOCATION):
     print(f"Connected to {tenancy}")
     return client
 
+
 def get_sql_statement():
     SQL = """
     SELECT EXISTS (select badger.id
@@ -60,22 +63,21 @@ def get_sql_statement():
     """
     return text(SQL)
 
+
 if __name__ == "__main__":
-#    config_file_path = os.path.expanduser(
-#        "~/Coding/nlds-hacking/server_config_production"
-#    )
-#
-#    print(connect_to_monitor(settings=config_file_path))
-    config_file_path = os.path.expanduser(
-        "/etc/nlds/server_config_production"
-    )
+    #    config_file_path = os.path.expanduser(
+    #        "~/Coding/nlds-hacking/server_config_production"
+    #    )
+    #
+    #    print(connect_to_monitor(settings=config_file_path))
+    config_file_path = os.path.expanduser("/etc/nlds/server_config_production")
     nlds_cat = connect_to_catalog(settings=config_file_path)
     nlds_cat.start_session()
     sql = get_sql_statement()
     s = time.perf_counter()
     x = nlds_cat.session.execute(sql)
     e = time.perf_counter()
-    print(e-s)
+    print(e - s)
     nlds_cat.end_session()
 #    client=(connect_to_s3(settings=config_file_path))
 #    lb = client.list_buckets()
