@@ -157,17 +157,13 @@ def list(queue, number):
         delivery_tags.append(method.delivery_tag)
         consumer.channel.basic_nack(delivery_tags[n])
 
+
 @nlds_qm.command("pop", help="pop a message off the front of the queue")
 @click.option(
     "-q", "--queue", default="", type=str, help="Queue name to list messages for."
 )
-@click.option(
-    "-a", "--ack", default=False, type=bool, is_flag=True
-)
-@click.option(
-    "-n", "--nack", default=False, type=bool, is_flag=True
-)
-
+@click.option("-a", "--ack", default=False, type=bool, is_flag=True)
+@click.option("-n", "--nack", default=False, type=bool, is_flag=True)
 def pop(queue, ack, nack):
     consumer = RabbitMQConsumer(queue)
     method, properties, body = consumer.consume_one_message()
@@ -188,6 +184,7 @@ def pop(queue, ack, nack):
     if nack:
         consumer.channel.basic_nack(method.delivery_tag)
         print("... nacked")
+
 
 @nlds_qm.command("dump", help="dump messages.")
 @click.option(
@@ -214,7 +211,15 @@ def pop(queue, ack, nack):
     is_flag=True,
     help="Compress the DATA part of the message",
 )
-def dump(queue, number, target, length, compress=False):
+@click.option(
+    "-a",
+    "--ack",
+    default=False,
+    type=bool,
+    is_flag=True,
+    help="Acknowledge the message - i.e. remove it from the queue",
+)
+def dump(queue, number, target, length, compress=False, ack=False):
     """Dump the messages as JSON files."""
     # check the target directory exists
     if not os.path.exists(target):
@@ -224,9 +229,12 @@ def dump(queue, number, target, length, compress=False):
     if not os.path.exists(queue_dir):
         os.mkdir(queue_dir)
     consumer = RabbitMQConsumer(queue)
-
+    message_methods = []
     for n in range(0, number):
+        # get one message and keep it
         method, properties, body = consumer.consume_one_message()
+        message_methods.append(method)
+
         body_json = json.loads(body)
         # get the routing key
         rk = method.routing_key
@@ -283,7 +291,11 @@ def dump(queue, number, target, length, compress=False):
                 msg = json.dumps(new_msg_dict)
                 fh.write(msg.encode("ascii"))
 
-        consumer.channel.basic_ack(method.delivery_tag)
+        # republish message if not acknowledge flag set
+        consumer.basic_ack(method=method)
+        if not ack:
+            print("Republish!")
+            consumer.publish_message(rk, msg_dict=body_json, properties=properties)
 
 
 @nlds_qm.command("load", help="load messages.")
@@ -329,6 +341,7 @@ def load(queue, transact_id, target, compress=False):
 
 def main():
     nlds_qm(prog_name="nlds-qm")
+
 
 if __name__ == "__main__":
     nlds_qm()
