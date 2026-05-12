@@ -2,6 +2,7 @@
 """
 status.py
 """
+
 __author__ = "Neil Massey"
 __date__ = "24 Feb 2025"
 __copyright__ = "Copyright 2025 United Kingdom Research and Innovation"
@@ -18,8 +19,9 @@ from nlds_admin.deserialize import deserialize
 
 from nlds_admin.rabbit.rpc_publisher import RabbitMQRPCPublisher
 
+
 def get_request_status(
-    rpc_publisher: RabbitMQRPCPublisher,        
+    rpc_publisher: RabbitMQRPCPublisher,
     user: str,
     group: str,
     groupall: Optional[bool] = False,
@@ -49,7 +51,7 @@ def get_request_status(
         elif State.has_value(s):
             s = State(s).value
         else:
-            msg=f"Given State {s} not valid."
+            msg = f"Given State {s} not valid."
             raise RuntimeError(msg)
 
     # Validate transaction_id is a valid uuid
@@ -57,14 +59,14 @@ def get_request_status(
         try:
             uuid.UUID(transaction_id)
         except ValueError:
-            msg="Given transaction_id not a valid uuid-4."
+            msg = "Given transaction_id not a valid uuid-4."
             raise RuntimeError(msg)
     # Validate sub_id is a valid uuid
     if sub_id is not None:
         try:
             uuid.UUID(sub_id)
         except ValueError:
-            msg="Given sub_id not a valid uuid-4."
+            msg = "Given sub_id not a valid uuid-4."
             raise RuntimeError(msg)
 
     # Assemble message ready for RCP call
@@ -96,7 +98,7 @@ def get_request_status(
         msg_dict[MSG.META][MSG.STATE] = state
 
     # call RPC function
-    routing_key = "monitor_q"
+    routing_key = RK.MONITOR_Q
     response = rpc_publisher.call(msg_dict=msg_dict, routing_key=routing_key)
     # Check if response is valid or whether t   he request timed out
     if response is not None:
@@ -107,14 +109,16 @@ def get_request_status(
         try:
             transaction_records = response_dict[MSG.DATA][MSG.RECORD_LIST]
         except KeyError as e:
-            msg = (f"Encountered error when trying to get a record list from the"
-                   f" message response ({e})")
+            msg = (
+                f"Encountered error when trying to get a record list from the"
+                f" message response ({e})"
+            )
             raise RuntimeError(msg)
 
         transaction_response = None
         # Only continue if the response actually had any transactions in it
         if transaction_records is not None and len(transaction_records) > 0:
-            routing_key = "catalog_q"
+            routing_key = RK.CATALOG_Q
             transaction_response = rpc_publisher.call(
                 msg_dict=response_dict, routing_key=routing_key
             )
@@ -126,5 +130,5 @@ def get_request_status(
         response = response.decode()
         return response
     else:
-        msg="Monitoring service could not be reached in time.",
+        msg = ("Monitoring service could not be reached in time.",)
         raise RuntimeError(msg)
