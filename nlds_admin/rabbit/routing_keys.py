@@ -2,6 +2,7 @@
 """
 routing_keys.py
 """
+
 __author__ = "Neil Massey and Jack Leland"
 __date__ = "24 Feb 2025"
 __copyright__ = "Copyright 2025 United Kingdom Research and Innovation"
@@ -15,7 +16,8 @@ LIST = "list"
 STAT = "stat"
 FIND = "find"
 META = "meta"
-CATALOG_Q = "catalog_q"
+CATALOG_Q = "catalog_q_user"
+MONITOR_Q = "monitor_q_user"
 
 # Exchange routing key parts – root
 ADMIN = "nlds-admin"
