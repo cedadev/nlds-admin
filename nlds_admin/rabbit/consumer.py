@@ -2,6 +2,7 @@
 """
 consumer.py
 """
+
 __author__ = "Neil Massey"
 __date__ = "15 Sep 2025"
 __copyright__ = "Copyright 2024 United Kingdom Research and Innovation"
@@ -36,6 +37,7 @@ class RabbitQEBinding:
         self.exchange = exchange
         self.routing_key = routing_key
 
+
 class RabbitQueue:
     def __init__(self, name: str, bindings: List[RabbitQEBinding]):
         self.name = name
@@ -60,6 +62,7 @@ def deserialize(body: str) -> dict:
     # works for v1.0.9
     body_dict = json.loads(body)
     return body_dict
+
 
 class RabbitMQConsumer(RMQP):
 
@@ -172,7 +175,6 @@ class RabbitMQConsumer(RMQP):
         monitoring_rk = ".".join([routing_key.split(".")[0], RK.MONITOR_PUT, RK.START])
         self.publish_message(monitoring_rk, body_json)
 
-
     @staticmethod
     def _acknowledge_message(channel: Channel, delivery_tag: str) -> None:
         """Acknowledge a message with a basic ack. This is the bare minimum
@@ -263,7 +265,7 @@ class RabbitMQConsumer(RMQP):
         set then the default - generated within __init__ - is used instead.
 
         """
-        #super().declare_bindings()
+        # super().declare_bindings()
         for queue in self.queues:
             self.channel.queue_declare(queue=queue.name, durable=True)
             for binding in queue.bindings:
@@ -302,9 +304,8 @@ class RabbitMQConsumer(RMQP):
             body[MSG.DETAILS][MSG.ROUTE] = route_info
         return body
 
-
     def consume_one_message(self):
-        """Method that consumes just one message """
+        """Method that consumes just one message"""
         self.get_connection()
         try:
             x = self.channel.consume(self.name)
@@ -327,7 +328,6 @@ class RabbitMQConsumer(RMQP):
 
     def basic_ack(self, method):
         self.channel.basic_ack(method.delivery_tag)
-
 
     def run(self):
         """
