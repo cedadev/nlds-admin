@@ -16,8 +16,10 @@ LIST = "list"
 STAT = "stat"
 FIND = "find"
 META = "meta"
+CANCEL = "cancel"
 CATALOG_Q = "catalog_q_user"
 MONITOR_Q = "monitor_q_user"
-
+NLDS_Q = "nlds_q"
+START = "start"
 # Exchange routing key parts – root
 ADMIN = "nlds-admin"

@@ -64,17 +64,17 @@ class RabbitMQPublisher:
         Throws a ValueError if not.
 
         """
-        if (
-            "name" not in exchange
-            or "type" not in exchange
-            or "delayed" not in exchange
-        ):
+        if "name" not in exchange or "type" not in exchange:
             raise ValueError(
                 "Exchange in config file incomplete, cannot " "be declared."
             )
 
     def declare_bindings(self):
-        raise NotImplementedError
+        """Go through list of exchanges from config file and declare each."""
+        for exchange in self.exchanges:
+            self.channel.exchange_declare(
+                exchange=exchange["name"], exchange_type=exchange["type"]
+            )
 
     @retry(RabbitRetryError, tries=-1, delay=1, backoff=2, max_delay=60, logger=logger)
     def get_connection(self):
@@ -187,6 +187,7 @@ class RabbitMQPublisher:
                 f"properly (rk = {routing_key})."
             )
             logger.debug(f"{type(e).__name__}: {e}")
+            raise e
             # NOTE: don't reraise in this case, can cause an infinite loop as
             # the message will never be sent.
             # raise RabbitRetryError(str(e), ampq_exception=e)

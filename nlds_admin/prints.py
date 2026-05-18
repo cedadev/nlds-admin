@@ -290,7 +290,7 @@ def print_single_stat(response: dict):
                 f"{'':<9}{'last update':<13}: {(sr['last_updated']).replace('T',' ')}"
             )
 
-            if len(sr["failed_files"]) > 0:
+            if "failed_files" in sr and len(sr["failed_files"]) > 0:
                 click.echo(f"{'':<9}{'failed files':<13}->")
                 for ff in sr["failed_files"]:
                     click.echo(f"{'':<9}{'+':<4} {'filepath':<8} : {ff['filepath']}")
@@ -319,7 +319,13 @@ def print_multi_stat(response: dict):
         )
 
 
-def construct_header_string(details, meta, time, simple=False, url=False):
+def construct_header_string(
+    details,
+    meta,
+    time=None,
+    simple=False,
+    url=False,
+):
     """
     Constructs a string based on the inputs and prints the response.
     """
@@ -328,7 +334,7 @@ def construct_header_string(details, meta, time, simple=False, url=False):
     if details.get("user_query"):
         header.append(f"user: {details['user_query']}")
     elif details.get("groupall") or details["user"] == "nlds":
-        header.append("All users")
+        header.append("users: **all**")
     else:
         header.append(f"user: {details['user']}")
 
@@ -360,16 +366,17 @@ def construct_header_string(details, meta, time, simple=False, url=False):
     if details.get("path"):
         header.append(f"path: {details['path']}")
     if meta.get("api_action"):
-        api_action = ", ".join(meta['api_action'])
+        api_action = ", ".join(meta["api_action"])
         header.append(f"api action: {api_action}")
 
     req_details = ", ".join(header)
 
     # Add order to the request details
-    if time:
-        req_details += ", order: descending"
-    else:
-        req_details += ", order: ascending"
+    if time is not None:
+        if time:
+            req_details += ", order: descending"
+        else:
+            req_details += ", order: ascending"
 
     return req_details
 
@@ -390,7 +397,14 @@ def print_table_headers(api_action):
     click.echo(headers.get(api_action, ""))
 
 
-def print_action(response: dict, req_details, req_meta, time, simple=False, url=None):
+def print_action(
+    response: dict,
+    req_details,
+    req_meta,
+    time=None,
+    simple=False,
+    url=None,
+):
     header = construct_header_string(req_details, req_meta, time)
     api_action = req_details["api_action"]
 
@@ -408,6 +422,7 @@ def print_action(response: dict, req_details, req_meta, time, simple=False, url=
             "list": "Listing holding for",
             "find": "Listing files for holding",
             "stat": "State of transaction for",
+            "cancel": "Cancel transaction for",
         }
         click.echo(f"{action_messages.get(api_action)} {header}")
 
@@ -415,6 +430,7 @@ def print_action(response: dict, req_details, req_meta, time, simple=False, url=
             "list": print_single_list,
             "find": lambda res: print_single_file(res, url),
             "stat": print_single_stat,
+            "cancel": print_single_stat,
         }
         action_functions[api_action](response)
         return
@@ -423,6 +439,7 @@ def print_action(response: dict, req_details, req_meta, time, simple=False, url=
         "list": "Listing holdings for",
         "find": "Listing files for holdings",
         "stat": "State of transactions for",
+        "cancel": "Cancel transactions for",
     }
     click.echo(f"{action_messages.get(api_action)} {header}")
 
