@@ -10,18 +10,40 @@ from nlds_admin.publishers.cancel import cancel_transaction
 import nlds_admin.rabbit.routing_keys as RK
 import nlds_admin.rabbit.message_keys as MSG
 
-from nlds_admin import prints
+from nlds_admin import prints, __version__
 from nlds_admin.deserialize import deserialize
 from uuid import uuid4
 import json
 
 
-@click.group()
+@click.group(invoke_without_command=True)
 @click.pass_context
-def nlds_admin(ctx):
-    rpc_publisher = RabbitMQRPCPublisher()
-    rpc_publisher.get_connection()
-    ctx.obj = rpc_publisher
+@click.option(
+    "-v",
+    "--version",
+    default=False,
+    is_flag=True,
+    help="Output NLDS admin version and exit.",
+)
+def nlds_admin(ctx, version):
+    if ctx.invoked_subcommand is None:
+        if version:
+            click.echo(f"Near Line Data Store admin {__version__}.")
+            click.echo(
+                "Copyright © 2022-2026 Centre of Environmental Data Analysis "
+                "Developers, Scientific and Technical Facilities Council (STFC), "
+                "UK Research and Innovation (UKRI)"
+            )
+            click.echo(
+                "See https://github.com/cedadev/nlds-admin/blob/main/LICENSE.txt for "
+                "the full license."
+            )
+        else:
+            click.echo(ctx.get_help())
+    else:
+        rpc_publisher = RabbitMQRPCPublisher()
+        rpc_publisher.get_connection()
+        ctx.obj = rpc_publisher
 
 
 @nlds_admin.command("list", help="List holdings.")
