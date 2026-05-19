@@ -1,12 +1,20 @@
 import click
 
 from nlds_admin.rabbit.rpc_publisher import RabbitMQRPCPublisher
+from nlds_admin.rabbit.publisher import RabbitMQPublisher
 from nlds_admin.publishers.list import list_holdings
 from nlds_admin.publishers.find import find_files
 from nlds_admin.publishers.status import get_request_status
+from nlds_admin.publishers.cancel import cancel_transaction
+
+import nlds_admin.rabbit.routing_keys as RK
+import nlds_admin.rabbit.message_keys as MSG
 
 from nlds_admin import prints
 from nlds_admin.deserialize import deserialize
+from uuid import uuid4
+import json
+
 
 @click.group()
 @click.pass_context
@@ -422,10 +430,119 @@ def stat(
     response_meta = json_response["meta"]
     response_data = response_data["records"]
 
+    if "failure" in response_details and len(response_details["failure"]) > 0:
+        fail_string = "Failed to stat transactions "
+        fail_string += prints.construct_header_string(
+            response_details,
+            response_meta,
+            time,
+        )
+        if response_details["failure"]:
+            fail_string += "\n" + response_details["failure"]
+        raise click.UsageError(fail_string)
+
     if json:
         click.echo(json_response)
     else:
         prints.print_action(response_data, response_details, response_meta, time)
+
+
+@nlds_admin.command(
+    "cancel", help="Cancel a transaction that is still in the QUEUING stage."
+)
+@click.pass_context
+@click.option(
+    "-u",
+    "--user",
+    # default=None,
+    type=str,
+    help="The username to cancel the transaction for.",
+)
+@click.option(
+    "-g",
+    "--group",
+    default=None,
+    type=str,
+    help="The group to cancel the transactions for.",
+)
+@click.option(
+    "-i",
+    "--id",
+    default=None,
+    type=int,
+    help="The numeric id of the transaction to cancel.",
+)
+@click.option(
+    "-n",
+    "--transaction_id",
+    default=None,
+    type=str,
+    help="The UUID transaction id of the transaction to cancel.",
+)
+@click.option(
+    "-b",
+    "--job_label",
+    default=None,
+    type=str,
+    help="The job label of the transaction(s) to cancel.",
+)
+@click.option(
+    "-j",
+    "--json",
+    default=False,
+    type=bool,
+    is_flag=True,
+    help="Output the result as JSON.",
+)
+def cancel(ctx, user, group, id, transaction_id, job_label, json):
+    # we do want to use the RPC publisher for this, so that we can have interaction
+    # with the user
+    rpc_publisher = ctx.obj
+    try:
+        ret = cancel_transaction(
+            rpc_publisher=rpc_publisher,
+            user=user,
+            group=group,
+            id=id,
+            transaction_id=transaction_id,
+            job_label=job_label,
+        )
+    finally:
+        rpc_publisher.close_connection()
+    json_response = deserialize(ret)
+    response_details = json_response["details"]
+    if "meta" in json_response:
+        response_meta = json_response["meta"]
+    else:
+        response_meta = {}
+
+    if "failure" in response_details and len(response_details["failure"]) > 0:
+        fail_string = "Failed to cancel transaction "
+        fail_string += prints.construct_header_string(response_details, response_meta)
+        if response_details["failure"]:
+            fail_string += "\n" + response_details["failure"]
+        raise click.UsageError(fail_string)
+
+    response_details = json_response["details"]
+    response_data = json_response["data"]
+    response_meta = json_response["meta"]
+    if "records" in response_data:
+        response_data = response_data["records"]
+
+    if "failure" in response_details and len(response_details["failure"]) > 0:
+        fail_string = "Failed to cancel transaction "
+        fail_string += prints.construct_header_string(response_details, response_meta)
+        if response_details["failure"]:
+            fail_string += "\n" + response_details["failure"]
+        raise click.UsageError(fail_string)
+
+    if json:
+        click.echo(json_response)
+    else:
+        prints.print_action(response_data, response_details, response_meta)
+
+    if json:
+        click.echo(json_response)
 
 
 def main():
