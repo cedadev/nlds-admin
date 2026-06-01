@@ -27,7 +27,7 @@ import nlds_admin.rabbit.routing_keys as RK
 import nlds_admin.rabbit.message_keys as MSG
 from nlds_admin.rabbit.state import State
 from nlds_admin.rabbit.publisher import RabbitMQPublisher as RMQP
-import nlds_admin.config as CFG
+import nlds_admin.common.config as CFG
 
 logger = logging.getLogger("nlds.root")
 

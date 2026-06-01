@@ -214,11 +214,13 @@ def print_single_file(response, print_url=False):
                 click.echo(f"{'':<4}{'ingest time':<16}: {time[0:19]}")
                 # locations
                 stls = " "
-                url = _get_url_from_file(f)
                 for s in f["locations"]:
                     stls += s["storage_type"] + ", "
+                if len(f["locations"]) == 0:
+                    stls += "NONE" + ", "
 
                 click.echo(f"{'':<4}{'storage location':<16}:{stls[0:-2]}")
+                url = _get_url_from_file(f)
                 if url is not None and print_url:
                     click.echo(f"{'':<4}{'url':<16}: {url}")
 

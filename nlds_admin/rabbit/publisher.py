@@ -18,7 +18,7 @@ import pika
 from pika.exceptions import AMQPConnectionError, UnroutableError, ChannelWrongStateError
 from retry import retry
 
-import nlds_admin.config as CFG
+import nlds_admin.common.config as CFG
 import nlds_admin.rabbit.routing_keys as RK
 
 logger = logging.getLogger(RK.ADMIN)

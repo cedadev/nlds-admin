@@ -9,14 +9,11 @@ __copyright__ = "Copyright 2026 United Kingdom Research and Innovation"
 __license__ = "BSD - see LICENSE file in top-level package directory"
 __contact__ = "neil.massey@stfc.ac.uk"
 
-from typing import Optional, Union
+from typing import Optional
 import uuid
 
 import nlds_admin.rabbit.message_keys as MSG
 import nlds_admin.rabbit.routing_keys as RK
-from nlds_admin.rabbit.state import State
-from nlds_admin.deserialize import deserialize
-
 from nlds_admin.rabbit.rpc_publisher import RabbitMQRPCPublisher
 
 

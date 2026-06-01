@@ -2,6 +2,7 @@
 """
 message_keys.py
 """
+
 __author__ = "Neil Massey and Jack Leland"
 __date__ = "24 Feb 2025"
 __copyright__ = "Copyright 2025 United Kingdom Research and Innovation"
@@ -40,3 +41,5 @@ LIMIT = "limit"
 DESCENDING = "descending"
 ROUTE = "route"
 COMPRESS = "compress"
+TRANSACTIONS = "transactions"
+HOLDINGS = "holdings"

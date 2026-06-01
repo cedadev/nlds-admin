@@ -1,19 +1,15 @@
 import click
 
 from nlds_admin.rabbit.rpc_publisher import RabbitMQRPCPublisher
-from nlds_admin.rabbit.publisher import RabbitMQPublisher
 from nlds_admin.publishers.list import list_holdings
 from nlds_admin.publishers.find import find_files
 from nlds_admin.publishers.status import get_request_status
 from nlds_admin.publishers.cancel import cancel_transaction
+from nlds_admin.publishers.audit import audit_holding
 
-import nlds_admin.rabbit.routing_keys as RK
-import nlds_admin.rabbit.message_keys as MSG
-
-from nlds_admin import prints, __version__
-from nlds_admin.deserialize import deserialize
-from uuid import uuid4
-import json
+from nlds_admin.common import prints
+from nlds_admin import __version__
+from nlds_admin.common.deserialize import deserialize
 
 
 @click.group(invoke_without_command=True)
@@ -565,6 +561,75 @@ def cancel(ctx, user, group, id, transaction_id, job_label, json):
 
     if json:
         click.echo(json_response)
+
+
+@nlds_admin.command(
+    "audit",
+    help=(
+        "Audit a holding to ensure that files in the database match the files on the "
+        "object store."
+    ),
+)
+@click.pass_context
+@click.option(
+    "-u",
+    "--user",
+    # default=None,
+    type=str,
+    help="The username to audit the holding for.",
+)
+@click.option(
+    "-g",
+    "--group",
+    default=None,
+    type=str,
+    help="The group to audit the holding for.",
+)
+@click.option(
+    "-i",
+    "--id",
+    default=None,
+    type=int,
+    help="The numeric id of the holding to audit.",
+)
+@click.option(
+    "-n",
+    "--transaction_id",
+    default=None,
+    type=str,
+    help="The UUID transaction id to audit.",
+)
+@click.option(
+    "-l",
+    "--label",
+    default=None,
+    type=str,
+    help="The label of the holding to audit.",
+)
+@click.option(
+    "-j",
+    "--json",
+    default=None,
+    type=str,
+    help="Output the audit results in JSON.",
+)
+def audit(ctx, user, group, id, transaction_id, label, json):
+    """
+    Audit will check that the files recorded in a holding actually exist on the object
+    storage.  Could later extend this to being on the tape, via the aggregation.
+    """
+    try:
+        rpc_publisher = ctx.obj
+        audit_holding(
+            rpc_publisher=rpc_publisher,
+            user=user,
+            group=group,
+            id=id,
+            transaction_id=transaction_id,
+            label=label,
+        )
+    except RuntimeError as e:
+        raise click.UsageError(e)
 
 
 def main():

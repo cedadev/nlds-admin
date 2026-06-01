@@ -15,7 +15,7 @@ import uuid
 import nlds_admin.rabbit.message_keys as MSG
 import nlds_admin.rabbit.routing_keys as RK
 from nlds_admin.rabbit.state import State
-from nlds_admin.deserialize import deserialize
+from nlds_admin.common.deserialize import deserialize
 
 from nlds_admin.rabbit.rpc_publisher import RabbitMQRPCPublisher
 
