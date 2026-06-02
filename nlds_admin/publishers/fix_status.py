@@ -144,7 +144,7 @@ def send_complete_message(
             MSG.USER: user,
             MSG.GROUP: group,
             MSG.STATE: State.COMPLETE.value,
-            MSG.ROUTE: "",
+            MSG.ROUTE: "NLDS_ADMIN",
         },
         MSG.DATA: {
             # Convert to PathDetails for JSON serialisation
