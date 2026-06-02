@@ -6,6 +6,7 @@ from nlds_admin.publishers.find import find_files
 from nlds_admin.publishers.status import get_request_status
 from nlds_admin.publishers.cancel import cancel_transaction
 from nlds_admin.publishers.audit import audit_holding
+from nlds_admin.publishers.fix_status import fix_transaction_status
 
 from nlds_admin.common import prints
 from nlds_admin import __version__
@@ -66,7 +67,7 @@ def nlds_admin(ctx, version):
     "expression (regex).",
 )
 @click.option(
-    "-i",
+    "-h",
     "--holding_id",
     default=None,
     type=int,
@@ -178,7 +179,7 @@ def list(
     "can be a regular expression (regex).",
 )
 @click.option(
-    "-i",
+    "-h",
     "--holding_id",
     default=None,
     type=int,
@@ -627,6 +628,78 @@ def audit(ctx, user, group, id, transaction_id, label, json):
             id=id,
             transaction_id=transaction_id,
             label=label,
+        )
+    except RuntimeError as e:
+        raise click.UsageError(e)
+
+
+@nlds_admin.command(
+    "fix-status",
+    help=(
+        "Fix status for a transaction that might have got stuck in a particular state."
+    ),
+)
+@click.pass_context
+@click.option(
+    "-u",
+    "--user",
+    type=str,
+    help="The username to fix the transaction for.",
+)
+@click.option(
+    "-g",
+    "--group",
+    type=str,
+    help="The group to fix the transaction for.",
+)
+@click.option(
+    "-i",
+    "--id",
+    default=None,
+    type=int,
+    help="The numeric id of the transaction to fix.",
+)
+@click.option(
+    "-n",
+    "--transaction_id",
+    default=None,
+    type=str,
+    help="The UUID transaction id to fix.",
+)
+@click.option(
+    "-s",
+    "--state",
+    type=str,
+    help="The state of the transaction to fix.  Options: "
+    "INITIALISING | ROUTING | SPLITTING | INDEXING | "
+    "CATALOG_PUTTING | TRANSFER_PUTTING | CATLOG_ROLLBACK | "
+    "CATALOG_GETTING | ARCHIVE_GETTING | TRANSFER_GETTING | "
+    "ARCHIVE_INIT | CATALOG_ARCHIVE_AGGREGATING | ARCHIVE_PUTTING | "
+    "CATALOG_ARCHIVE_UPDATING | CATALOG_ARCHIVE_ROLLBACK | "
+    "COMPLETE | FAILED | COMPLETE_WITH_ERRORS | "
+    "COMPLETE_WITH_WARNINGS",
+)
+@click.option(
+    "-j",
+    "--json",
+    default=None,
+    type=str,
+    help="Output the fix transaction results in JSON.",
+)
+def fix_status(ctx, user, group, id, transaction_id, state, json):
+    """
+    Fix status will check the status of a transaction and attempt to repair it.
+    """
+    try:
+        rpc_publisher = ctx.obj
+        fix_transaction_status(
+            rpc_publisher=rpc_publisher,
+            user=user,
+            group=group,
+            state=state,
+            id=id,
+            transaction_id=transaction_id,
+            json=json,
         )
     except RuntimeError as e:
         raise click.UsageError(e)

@@ -23,3 +23,7 @@ NLDS_Q = "nlds_q"
 START = "start"
 # Exchange routing key parts – root
 ADMIN = "nlds-admin"
+
+# Monitor keys for sending complete monitor records
+ROOT = "nlds-api"
+MONITOR_PUT = "monitor-put"

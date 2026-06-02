@@ -1,2 +1,6 @@
 .config
 __pycache__
+.vscode/
+build/
+docs/source/_build/
+nlds_admin.egg-info/

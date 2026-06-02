@@ -166,7 +166,7 @@ def print_single_list(response: dict):
     h = response[0]
     click.echo(f"{'':<4}{'user':<16}: {h['user']}")
     click.echo(f"{'':<4}{'group':<16}: {h['group']}")
-    click.echo(f"{'':<4}{'id':<16}: {h['id']}")
+    click.echo(f"{'':<4}{'holding id':<16}: {h['id']}")
     click.echo(f"{'':<4}{'label':<16}: {h['label']}")
     click.echo(f"{'':<4}{'ingest time':<16}: {h['date'].replace('T',' ')[0:19]}")
     if "transactions" in h:
@@ -389,7 +389,7 @@ def print_table_headers(api_action):
     """
     common = f"{'':<4}{'user':<16}{'group':<16}"
     headers = {
-        "list": f"{common}{'id':<6}{'label':<32}{'ingest time':<32}",
+        "list": f"{common}{'h-id':<6}{'label':<32}{'ingest time':<32}",
         "find": f"{common}{'h-id':<6}{'h-label':<16}{'size':<8}{'date':<12}{'path'}",
         "stat": (
             f"{common}{'id':<12}{'action':<16}{'job label':<16}"

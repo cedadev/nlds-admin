@@ -5,9 +5,13 @@ reset_tape_status.py
 
 This should be used if a file is marked as TAPE but the copy to tape did not succeed.
 This results in url_scheme, url_netloc and root being null strings ("").
-These are checked before the TAPE location is removed, unless --force option is 
+These are checked before the TAPE location is removed, unless --force option is
 supplied.
+
+NRM - This should probably be changed to a server side service, rather than hacking the DB directly
+
 """
+
 __author__ = "Neil Massey"
 __date__ = "24 Sep 2024"
 __copyright__ = "Copyright 2024 United Kingdom Research and Innovation"
@@ -101,8 +105,10 @@ def _remove_location_from_file(
     "--limit",
     default=None,
     type=int,
-    help=("Limit the number reset so that a sub-set can be fetched from tape, and a "
-          "sub-set fetched directly from object store"),
+    help=(
+        "Limit the number reset so that a sub-set can be fetched from tape, and a "
+        "sub-set fetched directly from object store"
+    ),
 )
 @click.option(
     "-S",
@@ -116,7 +122,7 @@ def _remove_location_from_file(
     "--debug",
     default=False,
     is_flag=True,
-    help="Run in debug / test mode.  No commits to the database are made"
+    help="Run in debug / test mode.  No commits to the database are made",
 )
 def reset_storage_status(
     user: str,

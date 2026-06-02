@@ -7,7 +7,9 @@ This should be used if a file is marked as TAPE but the copy to tape did not suc
 This results in url_scheme, url_netloc and root being null strings ("").
 These are checked before the TAPE location is removed, unless --force option is
 supplied.
+NRM - This should be changed to use RPC services rather than hacking the DB directly
 """
+
 __author__ = "Neil Massey"
 __date__ = "24 Sep 2024"
 __copyright__ = "Copyright 2024 United Kingdom Research and Innovation"
@@ -48,6 +50,7 @@ def merge_sub_records(target, sources):
     for msr in sources:
         merge_sub_record(target, msr)
 
+
 def check_monitor_transaction_sub_records(nlds_mon, transaction, fix):
     """
     This checks whether a transaction has multiple sub records that have the same
@@ -86,6 +89,7 @@ def check_monitor_transaction_sub_records_consistency(nlds_mon, transaction, fix
     for sr in transaction.sub_records:
         if sr.transaction_record_id != transaction.id:
             print("Inconsistent sub_id")
+
 
 def check_monitor_transaction_records(nlds_mon, transaction, fix):
     """Check and merge monitor transactions"""
@@ -129,7 +133,6 @@ def check_monitor_transaction_records(nlds_mon, transaction, fix):
                 nlds_mon.session.delete(msr)
             # delete the transaction record
             nlds_mon.session.delete(mtr)
-            
 
 
 def check_monitor_transactions(settings, id=None, fix=False):
@@ -250,7 +253,7 @@ def check_catalog_transactions(settings, id=None, fix=False):
     "--id",
     default=None,
     type=int,
-    help="Id of Holding or TransactionRecord to change"
+    help="Id of Holding or TransactionRecord to change",
 )
 @click.option("-T", "--test", default=0, type=int, help="Consistency check to perform")
 @click.option("-f", "--fix", default=False, is_flag=True, help="Fix the problem")
