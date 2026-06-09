@@ -19,6 +19,9 @@ from nlds_admin.rabbit import message_keys as MSG
 from nlds_admin.rabbit.state import State
 from nlds_admin.common.connect import connect_to_object_store
 from nlds_admin.rabbit.publisher import RabbitMQPublisher
+from nlds_admin.common.bcolors import bcolors
+import nlds_admin.common.config as CFG
+from nlds_admin.common.create_sub_id import create_sub_id
 
 
 def file_has_object_storage_location(file: dict) -> bool:
@@ -32,7 +35,7 @@ def file_has_object_storage_location(file: dict) -> bool:
         if l["storage_type"] == "OBJECT_STORAGE":
             return True
         if l["storage_type"] == "TAPE":
-            return True
+            continue
     return False
 
 
@@ -66,7 +69,12 @@ def get_incomplete_sub_ids(
         api_action = None
 
     for tr in trans_records:
-        print(f"Working on TransactionRecord:\n    {tr[MSG.TRANSACT_ID]}")
+        print(
+            bcolors.YELLOW
+            + "Working on TransactionRecord:\n"
+            + bcolors.ENDC
+            + f"    {tr[MSG.TRANSACT_ID]}"
+        )
         sub_records = tr[MSG.SUB_RECORD_LIST]
         for sr in sub_records:
             sr_state = sr[MSG.STATE]
@@ -77,7 +85,7 @@ def get_incomplete_sub_ids(
     return incomplete_sub_ids, transaction_id, api_action
 
 
-def get_incomplete_files(
+def get_complete_and_incomplete_files(
     rpc_publisher: RabbitMQRPCPublisher,
     user: str,
     group: str,
@@ -92,6 +100,7 @@ def get_incomplete_files(
         transaction_id=transaction_id,
     )
     incomplete_files = []
+    complete_files = []
     file_response = deserialize(trans_files)
     # there is a holding, then a transaction in the DATA section
     file_data = file_response[MSG.DATA]
@@ -102,9 +111,11 @@ def get_incomplete_files(
                 files = holding[MSG.TRANSACTIONS][tr][MSG.FILELIST]
                 for f in files:
                     # check the file has a storage location
-                    if not file_has_object_storage_location(f):
+                    if file_has_object_storage_location(f):
+                        complete_files.append(f["original_path"])
+                    else:
                         incomplete_files.append(f["original_path"])
-    return incomplete_files
+    return complete_files, incomplete_files
 
 
 def check_for_files_on_object_store(
@@ -122,11 +133,11 @@ def check_for_files_on_object_store(
     set_of_uploaded = set(uploaded_files)
     set_of_search = set(search_files)
     # Get the list of files that is not on object store
-    missing_files = list(set_of_search.difference(set_of_uploaded))
+    missing_files = list(set_of_search - set_of_uploaded)
     return uploaded_files, missing_files
 
 
-def send_complete_message(
+def send_monitor_complete_message(
     rabbit_publisher: RabbitMQPublisher,
     user: str,
     group: str,
@@ -140,14 +151,13 @@ def send_complete_message(
             # for the root message, the sub_id is the transaction_id
             MSG.SUB_ID: sub_id,
             MSG.API_ACTION: api_action,
-            MSG.JOB_LABEL: "monitor-put",
+            MSG.JOB_LABEL: "monitor-complete",
             MSG.USER: user,
             MSG.GROUP: group,
             MSG.STATE: State.COMPLETE.value,
             MSG.ROUTE: "NLDS_ADMIN",
         },
         MSG.DATA: {
-            # Convert to PathDetails for JSON serialisation
             MSG.FILELIST: [],
         },
         MSG.META: {
@@ -162,7 +172,139 @@ def send_complete_message(
     )
 
 
-# self.publish_message(monitoring_rk, body_json)
+def send_catalog_update_message(
+    rabbit_publisher: RabbitMQPublisher,
+    user: str,
+    group: str,
+    transaction_id: str,
+    sub_id: str,
+    api_action: str,
+    filelist: list[str],
+) -> None:
+    """This sends an update message to the catalog for the files that have been
+    uploaded to the object storage but not flagged as such in the database.
+    The message requires the tenancy, bucket and original path for each file.
+    The tenancy is in the config.
+    The bucket is nlds.+the transaction id.
+    The original path is in the filelist"""
+    config = CFG.load_config()
+    tenancy = config["cronjob_publisher"]["tenancy"]
+    bucket = "nlds." + transaction_id
+
+    # build the dictionary of the files locations
+    json_filelist = []
+    for f in filelist:
+        fj = {
+            "file_details": {
+                "original_path": f,
+                "path_type": 0,  # zero is FILE type
+                "link_path": None,
+                "size": 0,
+                "user": 0,
+                "group": 0,
+                "permissions": 0,
+                "mode": 0,
+                "access_time": 0.0,
+                "failure_reason": None,
+                "holding_id": 0,
+            },
+            "storage_locations": {
+                "OBJECT_STORAGE": {
+                    "storage_type": "OBJECT_STORAGE",
+                    "url_scheme": "http",
+                    "url_netloc": tenancy,
+                    "root": bucket,
+                    "path": f,
+                    "access_time": 0.0,
+                }
+            },
+        }
+        json_filelist.append(fj)
+
+    msg_dict = {
+        MSG.DETAILS: {
+            MSG.TRANSACT_ID: transaction_id,
+            # for the root message, the sub_id is the transaction_id
+            MSG.SUB_ID: sub_id,
+            MSG.API_ACTION: api_action,
+            MSG.JOB_LABEL: "catalog-update",
+            MSG.USER: user,
+            MSG.GROUP: group,
+            # be integer - can remove in future version when new server rolled out
+            MSG.STATE: State.CATALOG_UPDATING.value,
+            MSG.ROUTE: "NLDS_ADMIN",
+        },
+        MSG.DATA: {
+            MSG.FILELIST: json_filelist,
+        },
+        MSG.META: {
+            # Insert an empty meta dict
+        },
+        MSG.TYPE: MSG.TYPE_STANDARD,
+    }
+
+    routing_key = f"{RK.ROOT}.{RK.CATALOG_UPDATE}.{RK.START}"
+    rabbit_publisher.publish_message(
+        routing_key=routing_key,
+        msg_dict=msg_dict,
+    )
+
+
+def send_catalog_delete_message(
+    rabbit_publisher: RabbitMQPublisher,
+    user: str,
+    group: str,
+    transaction_id: str,
+    sub_id: str,
+    api_action: str,
+    filelist: list[str],
+):
+    json_filelist = []
+    for f in filelist:
+        failure_reason = f"Object with path {f} could not be found on object store."
+        fj = {
+            "file_details": {
+                "original_path": f,
+                "path_type": 0,  # zero is FILE type
+                "link_path": None,
+                "size": 0,
+                "user": 0,
+                "group": 0,
+                "permissions": 0,
+                "mode": 0,
+                "access_time": 0.0,
+                "failure_reason": failure_reason,
+                "holding_id": 0,
+            }
+        }
+        json_filelist.append(fj)
+
+    msg_dict = {
+        MSG.DETAILS: {
+            MSG.TRANSACT_ID: transaction_id,
+            # for the root message, the sub_id is the transaction_id
+            MSG.SUB_ID: sub_id,
+            MSG.API_ACTION: api_action,
+            MSG.JOB_LABEL: "catalog-delete",
+            MSG.USER: user,  # user is used in _catalog_del, and can be a string
+            MSG.GROUP: group,  # group is used in _catalog_del, and can be a string
+            MSG.STATE: State.CATALOG_DELETING.value,
+            MSG.ROUTE: "NLDS_ADMIN",
+        },
+        MSG.DATA: {
+            MSG.FILELIST: json_filelist,
+        },
+        MSG.META: {
+            # Insert an empty meta dict
+        },
+        MSG.TYPE: MSG.TYPE_STANDARD,
+    }
+    # send catalog message
+    catalog_routing_key = f"{RK.ROOT}.{RK.CATALOG_DEL}.{RK.START}"
+    rabbit_publisher.publish_message(
+        routing_key=catalog_routing_key,
+        msg_dict=msg_dict,
+    )
 
 
 def fix_transfer_putting(
@@ -174,44 +316,137 @@ def fix_transfer_putting(
     incomplete_sub_ids: list[str],
     api_action: str,
 ) -> None:
+    """
+    Fix the status of files that have errored in transfer.
+    Also check that they are actually on the object store before committing any changes.
+    Four cases:
+    1.  The files are marked as complete (have object store record) and are present on
+        the object store - just send a complete message to the monitor but do nothing
+        to the database [complete_files]
+    2.  The files are marked as complete but do not exist on the object store - set as
+        incomplete and remove [missing files]
+    3.  The files are not marked as complete but exist on the object store - set as
+        complete and update the catalog [incomplete files]
+    4.  The files are not marked as complete and do not exist on the object store - set
+        as incomplete and remove [missing files]
+    """
     # get the files that are incomplete
-    incomplete_files = get_incomplete_files(
+    complete_files, incomplete_files = get_complete_and_incomplete_files(
         rpc_publisher=rpc_publisher,
         user=user,
         group=group,
         transaction_id=transaction_id,
     )
+    # check whether the "complete_files" are on the object store
+    _, missing_complete_files = check_for_files_on_object_store(
+        transaction_id,
+        complete_files,
+    )
+    # remove missing_files from the complete files
+    for m in missing_complete_files:
+        complete_files.remove(m)
 
-    if len(incomplete_files) == 0:
-        # no files are incomplete, we can mark the sub ids as finished
-        # need to send a message to the Monitor Queue
-        print("    Sub ids with all files uploaded to object store:")
-        for sid in incomplete_sub_ids:
-            print(f"        {sid}")
-            send_complete_message(
+    # check whether the "incomplete_files" are on the object store
+    _, missing_incomplete_files = check_for_files_on_object_store(
+        transaction_id,
+        incomplete_files,
+    )
+    # remove missing_files from the incomplete files
+    for m in missing_incomplete_files:
+        incomplete_files.remove(m)
+    # munge both missing lists together
+    missing_files = missing_complete_files
+    missing_files.extend(missing_incomplete_files)
+
+    # do incomplete files first
+    if len(incomplete_files) != 0:
+        # these files are incomplete - they are present on the object storage, but do
+        # not have the correct entry in the database
+        print(
+            bcolors.GREEN
+            + "    Incomplete files, on object store but not updated in database:"
+            + bcolors.ENDC
+        )
+        for f in incomplete_files:
+            print(f"        {f}")
+        print(
+            bcolors.RED
+            + "Files have been found that are uploaded to the object store but do "
+            "not have complete database records.\n"
+            "Do you wish to fix them: Y/N ?" + bcolors.ENDC
+        )
+        user_response = input().lower()
+        if user_response == "y":
+            send_catalog_update_message(
                 rabbit_publisher=rabbit_publisher,
                 user=user,
                 group=group,
                 transaction_id=transaction_id,
-                sub_id=sid,
+                # use the first sub id for the monitoring - complete the other
+                # sub records below
+                sub_id=str(create_sub_id(filelist=incomplete_files)),
                 api_action=api_action,
+                filelist=incomplete_files,
             )
-    else:
-        # these files are incomplete
-        # we should now check to see if they are present on the object storage
-        # 1. if they are then we create a catalog update message with the files and
-        #    the object storage location in the message
-        # 2. if they are not then we create a remove from catalog message
-        uploaded_files, missing_files = check_for_files_on_object_store(
-            transaction_id,
-            incomplete_files,
+
+    if len(missing_files) > 0:
+        print(
+            bcolors.GREEN
+            + "    Missing files, in database but not on object store:"
+            + bcolors.ENDC
         )
-        print("    Uploaded files, on object store but not updated in database:")
-        for f in uploaded_files:
-            print(f"        {f}")
-        print("    Missing files, in database but not on object store:")
         for f in missing_files:
             print(f"        {f}")
+        print(
+            bcolors.RED
+            + "Files have been found that have database entries, but are missing "
+            "from the object store. \n"
+            "Do you wish to mark them as a failed upload: Y/N ?" + bcolors.ENDC
+        )
+        user_response = input().lower()
+        if user_response == "y":
+            send_catalog_delete_message(
+                rabbit_publisher=rabbit_publisher,
+                user=user,
+                group=group,
+                transaction_id=transaction_id,
+                # use the first sub id for the monitoring - complete the other
+                # sub records below
+                sub_id=str(create_sub_id(filelist=missing_files)),
+                api_action=api_action,
+                filelist=missing_files,
+            )
+
+    # no files are incomplete, we can mark the sub ids as finished
+    # need to send a message to the Monitor Queue
+    print(
+        bcolors.GREEN
+        + "    Sub ids with all files uploaded to object store:"
+        + bcolors.ENDC
+    )
+    for sid in incomplete_sub_ids:
+        print(f"        {sid}")
+    if len(incomplete_sub_ids) > 0:
+        print(
+            bcolors.RED
+            + "Sub ids have been found with incomplete database records, even "
+            "though the transfer completed.\n"
+            "Do you wish to fix them: Y/N ?" + bcolors.ENDC
+        )
+        user_response = input().lower()
+        if user_response == "y":
+            # we start at an index offset if the complete and incomplete logic ran, so
+            # that we do not send COMPLETE messages to those that are FAILED or
+            # CATALOG_UPDATING
+            for sid in incomplete_sub_ids:
+                send_monitor_complete_message(
+                    rabbit_publisher=rabbit_publisher,
+                    user=user,
+                    group=group,
+                    transaction_id=transaction_id,
+                    sub_id=sid,
+                    api_action=api_action,
+                )
 
 
 def fix_transaction_status(
@@ -251,7 +486,7 @@ def fix_transaction_status(
         transaction_id = ret_trans_id
 
     if len(incomplete_sub_ids) > 0:
-        print("    Incomplete sub_ids")
+        print(bcolors.YELLOW + "    Incomplete sub_ids" + bcolors.ENDC)
         for i in incomplete_sub_ids:
             print(f"        {i}")
 

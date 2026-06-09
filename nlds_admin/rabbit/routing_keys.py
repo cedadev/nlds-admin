@@ -27,3 +27,5 @@ ADMIN = "nlds-admin"
 # Monitor keys for sending complete monitor records
 ROOT = "nlds-api"
 MONITOR_PUT = "monitor-put"
+CATALOG_UPDATE = "catalog-update"
+CATALOG_DEL = "catalog-del"
