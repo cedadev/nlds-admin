@@ -35,6 +35,7 @@ def get_request_status(
     query_user: Optional[str] = None,
     query_group: Optional[str] = None,
     limit: Optional[int] = None,
+    offset: Optional[int] = None,
     descending: Optional[bool] = False,
 ):
     # Validate state at this point.
@@ -86,6 +87,7 @@ def get_request_status(
         MSG.DATA: {},
         MSG.META: {
             MSG.LIMIT: limit,
+            MSG.OFFSET: offset,
             MSG.DESCENDING: descending,
         },
         MSG.TYPE: MSG.TYPE_STANDARD,
