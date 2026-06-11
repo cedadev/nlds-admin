@@ -397,6 +397,15 @@ def find(
     help="Limit the number of transactions to list",
 )
 @click.option(
+    "-O",
+    "--offset",
+    default=None,
+    type=int,
+    help=(
+        "Offset the start of the transactions to list.  This, in conjunction with limit, can be used to page through the transactions returned."
+    ),
+)
+@click.option(
     "-9/-0",
     "--descending/--ascending",
     "time",
@@ -417,6 +426,7 @@ def stat(
     exclude_api_action,
     json,
     limit,
+    offset,
     time,
 ):
     rpc_publisher = ctx.obj
@@ -439,6 +449,7 @@ def stat(
             query_user=user,
             query_group=group,
             limit=limit,
+            offset=offset,
             descending=time,
         )
     finally:
