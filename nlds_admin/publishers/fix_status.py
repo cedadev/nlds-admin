@@ -506,3 +506,19 @@ def fix_transaction_status(
                     incomplete_sub_ids=incomplete_sub_ids,
                     api_action=api_action,
                 )
+                rabbit_publisher.close_connection()
+
+            case "CATALOG_PUTTING":
+                # I think this is the same as fix_transfer_putting
+                rabbit_publisher = RabbitMQPublisher()
+                rabbit_publisher.get_connection()
+                fix_transfer_putting(
+                    rpc_publisher=rpc_publisher,
+                    rabbit_publisher=rabbit_publisher,
+                    user=user,
+                    group=group,
+                    transaction_id=transaction_id,
+                    incomplete_sub_ids=incomplete_sub_ids,
+                    api_action=api_action,
+                )
+                rabbit_publisher.close_connection()
