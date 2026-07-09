@@ -2,6 +2,7 @@
 """
 rpc_publisher.py
 """
+
 __author__ = "Neil Massey and Jack Leland"
 __date__ = "24 Feb 2025"
 __copyright__ = "Copyright 2025 United Kingdom Research and Innovation"
@@ -38,7 +39,6 @@ class RabbitMQRPCPublisher(RMQP):
         self.queue_suffix = 0
 
         rpc_config = self.DEFAULT_CONFIG
-
         # Merge rpc config section into default (overriding defaults) if present
         if self.RPC_CONFIG_SECTION in self.whole_config:
             rpc_config = rpc_config | self.whole_config[self.RPC_CONFIG_SECTION]

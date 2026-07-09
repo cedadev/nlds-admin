@@ -7,6 +7,7 @@ from nlds_admin.publishers.status import get_request_status
 from nlds_admin.publishers.cancel import cancel_transaction
 from nlds_admin.publishers.audit import audit_holding
 from nlds_admin.publishers.fix_status import fix_transaction_status
+from nlds_admin.publishers.fix_tape_records import fix_holding_tape_records
 
 from nlds_admin.common import prints
 from nlds_admin import __version__
@@ -647,7 +648,9 @@ def audit(ctx, user, group, id, transaction_id, label, json):
 @nlds_admin.command(
     "fix-status",
     help=(
-        "Fix status for a transaction that might have got stuck in a particular state."
+        "Fix status for a transaction that might have got stuck in a particular state. "
+        "Note: this only affects the monitor database and status, it does not do "
+        "anything to the catalog database."
     ),
 )
 @click.pass_context
@@ -710,6 +713,74 @@ def fix_status(ctx, user, group, id, transaction_id, state, json):
             state=state,
             id=id,
             transaction_id=transaction_id,
+            json=json,
+        )
+    except RuntimeError as e:
+        raise click.UsageError(e)
+
+
+@nlds_admin.command(
+    "fix-tape-records",
+    help=(
+        "Fix the tape records for files in a holding that has empty tape records.  "
+        "Empty tape records are used as a placeholder to prevent the file being "
+        "scheduled for tape backup more than once."
+    ),
+)
+@click.pass_context
+@click.option(
+    "-u",
+    "--user",
+    type=str,
+    help="The username to fix the tape records for.",
+)
+@click.option(
+    "-g",
+    "--group",
+    type=str,
+    help="The group to fix the tape records for.",
+)
+@click.option(
+    "-h",
+    "--holding-id",
+    default=None,
+    type=int,
+    help="The numeric id of the holding to fix.",
+)
+@click.option(
+    "-n",
+    "--transaction_id",
+    default=None,
+    type=str,
+    help="The UUID transaction id of the holding to fix.",
+)
+@click.option(
+    "-L",
+    "--limit",
+    default=None,
+    type=int,
+    help="Limit the number of files to fix",
+)
+@click.option(
+    "-j",
+    "--json",
+    default=None,
+    type=str,
+    help="Output the fix tape location results in JSON.",
+)
+def fix_tape_records(ctx, user, group, holding_id, transaction_id, limit, json):
+    """
+    Fix status will check the status of a transaction and attempt to repair it.
+    """
+    try:
+        rpc_publisher = ctx.obj
+        fix_holding_tape_records(
+            rpc_publisher=rpc_publisher,
+            user=user,
+            group=group,
+            holding_id=holding_id,
+            transaction_id=transaction_id,
+            limit=limit,
             json=json,
         )
     except RuntimeError as e:

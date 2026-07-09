@@ -456,7 +456,7 @@ def fix_transaction_status(
     state: str,
     id: Optional[int] = None,
     transaction_id: Optional[str] = None,
-    json: bool = False,
+    json: Optional[bool] = False,
 ):
     # error check - need to supply user, group, id and / or transaction
     # need user and group
@@ -465,7 +465,7 @@ def fix_transaction_status(
     if not state:
         raise RuntimeError("State is required to perform a fix-status.")
 
-    # need one of id, transaction id or job_label
+    # need one of id, transaction id
     if not (id or transaction_id):
         raise RuntimeError(
             "One of the following is required to perform a fix-status: "
