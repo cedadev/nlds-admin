@@ -1,5 +1,4 @@
 import click
-from nlds_admin.rabbit.publisher import RabbitMQPublisher
 from nlds_admin.rabbit.consumer import RabbitMQConsumer
 from nlds_admin.rabbit import message_keys as MSG
 import json
