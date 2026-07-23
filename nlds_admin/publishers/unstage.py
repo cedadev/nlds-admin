@@ -1,53 +1,37 @@
 # encoding: utf-8
 """
-fix_tape_records.py
+unstage.py
 """
 
 __author__ = "Neil Massey"
-__date__ = "09 July 2026"
+__date__ = "22 July 2026"
 __copyright__ = "Copyright 2026 United Kingdom Research and Innovation"
 __license__ = "BSD - see LICENSE file in top-level package directory"
 __contact__ = "neil.massey@stfc.ac.uk"
 
 from typing import Optional
+
 from nlds_admin.rabbit.rpc_publisher import RabbitMQRPCPublisher
 from nlds_admin.rabbit.publisher import RabbitMQPublisher
 from nlds_admin.rabbit import message_keys as MSG
 from nlds_admin.rabbit import routing_keys as RK
-from nlds_admin.rabbit.state import State
 from nlds_admin.publishers.find import find_files
 from nlds_admin.common.deserialize import deserialize
 from nlds_admin.common.bcolors import bcolors
 from nlds_admin.common.create_sub_id import create_sub_id
+from nlds_admin.rabbit.state import State
 
 
-def file_has_empty_tape_storage_location(file: dict):
-    locations = file["locations"]
-    for l in locations:
-        if l["storage_type"] == "TAPE" and l["root"] == "" and l["url"] == "":
-            return True
-    return False
-
-
-def get_files_with_incomplete_records(
+def get_files_from_holding(
     rpc_publisher: RabbitMQRPCPublisher,
     user: str,
     group: str,
     holding_id: int,
     transaction_id: str,
     limit: int,
-) -> dict:
-    """Use the find_files function to get a list of files for the holding or
-    transaction.  Then filter these on whether they have a complete TAPE record.
-    If root is the null string, and url is also the null string then the TAPE record
-    is not valid.
-    It returns a dictionary of:
-    {
-        "transaction_id": ["original_path_1", "original_path_2"]
-    }
-    which can then be used to send a message to CATALOG_REMOVE.
-    """
-    # First of all get a list of the files for the holding or transaction_id
+):
+
+    # get the list of files using the holding_id or transaction_id
     files_stat = find_files(
         rpc_publisher=rpc_publisher,
         user=user,
@@ -66,20 +50,19 @@ def get_files_with_incomplete_records(
     )
     file_data = files_response[MSG.DATA]
     return_dict = {}
-    print(bcolors.YELLOW + "  Untaping files:" + bcolors.ENDC)
+    print(bcolors.YELLOW + "  Unstaging files:" + bcolors.ENDC)
     for h in file_data[MSG.HOLDINGS]:
         holding = file_data[MSG.HOLDINGS][h]
         for tr in holding[MSG.TRANSACTIONS]:
             return_dict[tr] = []
             files = holding[MSG.TRANSACTIONS][tr][MSG.FILELIST]
             for f in files:
-                if file_has_empty_tape_storage_location(f):
-                    print(f"    {f["original_path"]}")
-                    return_dict[tr].append(f["original_path"])
+                print(f"    {f["original_path"]}")
+                return_dict[tr].append(f["original_path"])
     return return_dict
 
 
-def send_archive_remove_message(
+def send_catalog_remove_message(
     rabbit_publisher: RabbitMQPublisher,
     user: str,
     group: str,
@@ -89,7 +72,6 @@ def send_archive_remove_message(
 ):
     # create the rabbit publisher and build the routing_key
     routing_key = f"{RK.ROOT}.{RK.CATALOG_REMOVE}.{RK.START}"
-
     # build the message: it contains the filelist converted to file_details
     sub_id = str(create_sub_id(filelist=filelist))
     msg_filelist = []
@@ -116,8 +98,8 @@ def send_archive_remove_message(
         MSG.DETAILS: {
             MSG.TRANSACT_ID: transaction_id,
             MSG.SUB_ID: sub_id,
-            MSG.API_ACTION: "archive-put",
-            MSG.JOB_LABEL: "archive-remove",
+            MSG.API_ACTION: "unstage",
+            MSG.JOB_LABEL: "catalog-remove",
             MSG.USER: user,
             MSG.GROUP: group,
             MSG.STATE: State.CATALOG_REMOVING.value,
@@ -138,7 +120,7 @@ def send_archive_remove_message(
     )
 
 
-def fix_holding_tape_records(
+def unstage_holding(
     rpc_publisher: RabbitMQRPCPublisher,
     user: str,
     group: str,
@@ -159,7 +141,7 @@ def fix_holding_tape_records(
             "transaction_id."
         )
 
-    incomplete_files = get_files_with_incomplete_records(
+    files_dict = get_files_from_holding(
         rpc_publisher=rpc_publisher,
         user=user,
         group=group,
@@ -168,24 +150,13 @@ def fix_holding_tape_records(
         limit=limit,
     )
 
-    if len(incomplete_files) > 0:
-        n_incmpl_files = 0
-        # count the incomplete files for each transaction in the dictionary
-        for k in incomplete_files:
-            n_incmpl_files += len(incomplete_files[k])
-        print(
-            bcolors.YELLOW
-            + f"    Number of incomplete files: {n_incmpl_files}"
-            + bcolors.ENDC
-        )
+    rabbit_publisher = RabbitMQPublisher()
+    rabbit_publisher.get_connection()
 
-        rabbit_publisher = RabbitMQPublisher()
-        rabbit_publisher.get_connection()
-
-        # Send a message for each transaction in the catalog_remove_dict
-        for tr in incomplete_files:
-            filelist = incomplete_files[tr]
-            send_archive_remove_message(
+    for tr in files_dict:
+        filelist = files_dict[tr]
+        if len(filelist) > 0:
+            send_catalog_remove_message(
                 rabbit_publisher=rabbit_publisher,
                 user=user,
                 group=group,
@@ -194,4 +165,4 @@ def fix_holding_tape_records(
                 filelist=filelist,
             )
 
-        rabbit_publisher.close_connection()
+    rabbit_publisher.close_connection()

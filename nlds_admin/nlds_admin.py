@@ -8,6 +8,7 @@ from nlds_admin.publishers.cancel import cancel_transaction
 from nlds_admin.publishers.audit import audit_holding
 from nlds_admin.publishers.fix_status import fix_transaction_status
 from nlds_admin.publishers.fix_tape_records import fix_holding_tape_records
+from nlds_admin.publishers.unstage import unstage_holding
 
 from nlds_admin.common import prints
 from nlds_admin import __version__
@@ -775,6 +776,82 @@ def fix_tape_records(ctx, user, group, holding_id, transaction_id, limit, json):
     try:
         rpc_publisher = ctx.obj
         fix_holding_tape_records(
+            rpc_publisher=rpc_publisher,
+            user=user,
+            group=group,
+            holding_id=holding_id,
+            transaction_id=transaction_id,
+            limit=limit,
+            json=json,
+        )
+    except RuntimeError as e:
+        raise click.UsageError(e)
+
+
+@nlds_admin.command(
+    "unstage",
+    help=(
+        "Unstage the files in a holding by removing the location record of them on the "
+        "Object Storage.  Currently this command does not actually remove the files "
+        "from the Object Storage."
+    ),
+)
+@click.pass_context
+@click.option(
+    "-u",
+    "--user",
+    type=str,
+    help="The username to remove the Object Storage location records for.",
+)
+@click.option(
+    "-g",
+    "--group",
+    type=str,
+    help="The group to remove the Object Storage location records for.",
+)
+@click.option(
+    "-h",
+    "--holding-id",
+    default=None,
+    type=int,
+    help=(
+        "The numeric id of the holding to remove the Object Storage location records "
+        "for."
+    ),
+)
+@click.option(
+    "-n",
+    "--transaction_id",
+    default=None,
+    type=str,
+    help=(
+        "The UUID transaction id of the holding to remove the Object Storage location "
+        "records for."
+    ),
+)
+@click.option(
+    "-L",
+    "--limit",
+    default=None,
+    type=int,
+    help=(
+        "Limit the number of files to remove the Object Storage location " "records for"
+    ),
+)
+@click.option(
+    "-j",
+    "--json",
+    default=None,
+    type=str,
+    help="Output the results of unstaging in JSON.",
+)
+def unstage(ctx, user, group, holding_id, transaction_id, limit, json):
+    """
+    Fix status will check the status of a transaction and attempt to repair it.
+    """
+    try:
+        rpc_publisher = ctx.obj
+        unstage_holding(
             rpc_publisher=rpc_publisher,
             user=user,
             group=group,
