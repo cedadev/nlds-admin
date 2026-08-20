@@ -835,8 +835,15 @@ def fix_tape_records(ctx, user, group, holding_id, transaction_id, limit, json):
     default=None,
     type=int,
     help=(
-        "Limit the number of files to remove the Object Storage location " "records for"
+        "Limit the number of files to remove the Object Storage location records for"
     ),
+)
+@click.option(
+    "-M",
+    "--max_per_message",
+    default=None,
+    type=int,
+    help=("Limit the number of files sent per message"),
 )
 @click.option(
     "-j",
@@ -858,6 +865,7 @@ def unstage(ctx, user, group, holding_id, transaction_id, limit, json):
             holding_id=holding_id,
             transaction_id=transaction_id,
             limit=limit,
+            max_per_message=max_per_message,
             json=json,
         )
     except RuntimeError as e:

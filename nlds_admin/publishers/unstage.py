@@ -127,17 +127,18 @@ def unstage_holding(
     holding_id: int,
     transaction_id: Optional[str] = None,
     limit=1000,
+    max_per_message=1000,
     json: Optional[bool] = False,
 ):
     # error check - need to supply user, group, id and / or transaction
     # need user and group
     if not user or not group:
-        raise RuntimeError("User and group are required to perform a fix-status.")
+        raise RuntimeError("User and group are required to perform an unstage.")
 
     # need one of holding id or transaction id
     if not (holding_id or transaction_id):
         raise RuntimeError(
-            "One of the following is required to perform a fix-status: holding_id, "
+            "One of the following is required to perform a unstage: holding_id, "
             "transaction_id."
         )
 
@@ -155,14 +156,19 @@ def unstage_holding(
 
     for tr in files_dict:
         filelist = files_dict[tr]
-        if len(filelist) > 0:
+        fl_len = len(filelist)
+        if len(filelist) == 0:
+            continue
+        for i in range(0, fl_len, max_per_message):
+            slc = slice(i, min(i + max_per_message, fl_len))
+            sub_filelist = filelist[slc]
             send_catalog_remove_message(
                 rabbit_publisher=rabbit_publisher,
                 user=user,
                 group=group,
                 holding_id=holding_id,
                 transaction_id=tr,
-                filelist=filelist,
+                filelist=sub_filelist,
             )
 
     rabbit_publisher.close_connection()
