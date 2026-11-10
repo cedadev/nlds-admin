@@ -87,9 +87,10 @@ def send_archive_remove_message(
     transaction_id: str,
     filelist: list[str],
 ):
+    """Remove records of the files Tape locations by sending an archive_remove
+    message"""
     # create the rabbit publisher and build the routing_key
     routing_key = f"{RK.ROOT}.{RK.CATALOG_REMOVE}.{RK.START}"
-
     # build the message: it contains the filelist converted to file_details
     sub_id = str(create_sub_id(filelist=filelist))
     msg_filelist = []
@@ -128,6 +129,7 @@ def send_archive_remove_message(
         },
         MSG.META: {
             MSG.HOLDING_ID: holding_id,
+            MSG.STORAGE_TYPE: "TAPE",
         },
         MSG.TYPE: MSG.TYPE_STANDARD,
     }
