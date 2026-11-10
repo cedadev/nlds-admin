@@ -44,13 +44,13 @@ def get_files_from_holding(
     files_response = deserialize(files_stat)
     print(
         bcolors.YELLOW
-        + "Working on Holding with holding_id:\n"
+        + "Working on Holding with holding_id: "
         + bcolors.ENDC
         + f"  {files_response[MSG.DETAILS][MSG.HOLDING_ID]}"
     )
     file_data = files_response[MSG.DATA]
     return_dict = {}
-    print(bcolors.YELLOW + "  Unstaging files:" + bcolors.ENDC)
+    print(bcolors.RED + "  Files:" + bcolors.ENDC)
     for h in file_data[MSG.HOLDINGS]:
         holding = file_data[MSG.HOLDINGS][h]
         for tr in holding[MSG.TRANSACTIONS]:
@@ -70,6 +70,8 @@ def send_catalog_remove_message(
     transaction_id: str,
     filelist: list[str],
 ):
+    """Remove records of the files Object Storage locations by sending an archive_remove
+    message"""
     # create the rabbit publisher and build the routing_key
     routing_key = f"{RK.ROOT}.{RK.CATALOG_REMOVE}.{RK.START}"
     # build the message: it contains the filelist converted to file_details
@@ -110,6 +112,7 @@ def send_catalog_remove_message(
         },
         MSG.META: {
             MSG.HOLDING_ID: holding_id,
+            MSG.STORAGE_TYPE: "OBJECT_STORAGE",
         },
         MSG.TYPE: MSG.TYPE_STANDARD,
     }
@@ -150,7 +153,6 @@ def unstage_holding(
         transaction_id=transaction_id,
         limit=limit,
     )
-
     rabbit_publisher = RabbitMQPublisher()
     rabbit_publisher.get_connection()
 
