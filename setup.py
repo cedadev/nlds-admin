@@ -2,6 +2,7 @@
 """
 setup.py
 """
+
 __author__ = "William Cross and Neil Massey"
 __date__ = "06 Mar 2025"
 __copyright__ = "Copyright 2025 United Kingdom Research and Innovation"
@@ -22,16 +23,9 @@ setup(
     name="nlds-admin",
     version=__version__,
     packages=find_packages(),
-    install_requires=[
-        'decorator',
-        'pika',
-        'py',
-        'retry',
-        'click'
-    ],
+    install_requires=["decorator", "pika", "py", "retry", "click"],
     include_package_data=True,
-    package_data={
-    },
+    package_data={},
     license="LICENSE.txt",  # example license
     description=("Admin tool for CEDA Near-Line Data Store"),
     long_description=README,
@@ -52,8 +46,10 @@ setup(
         "Topic :: Internet :: WWW/HTTP",
         "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
     ],
-    entry_points = {
-        'console_scripts': ['nlds-admin=nlds_admin.nlds_admin:main',
-                            'nlds-qm=nlds_admin.nlds_qm:main'],
-    }
+    entry_points={
+        "console_scripts": [
+            "nlds-admin=nlds_admin.nlds_admin:main",
+            "nlds-qm=nlds_admin.nlds_qm:main",
+        ],
+    },
 )
