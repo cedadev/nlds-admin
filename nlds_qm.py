@@ -12,6 +12,10 @@ import os.path
 Utility program to manipulate messages in the NLDS queue.
 The following operations can be performed:
 1. split: if they have too many files to complete before the message timeout.
+2. pop: pop a message off the head of the queue and output its details.
+3. list: list a number of messages and output the details.
+4. dump: dump all the messages in a queue to a file.
+5. load: load the dumped messages back into the queue.
 """
 
 
