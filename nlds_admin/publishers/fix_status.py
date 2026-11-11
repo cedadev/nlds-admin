@@ -17,11 +17,13 @@ from nlds_admin.common.deserialize import deserialize
 from nlds_admin.rabbit import routing_keys as RK
 from nlds_admin.rabbit import message_keys as MSG
 from nlds_admin.rabbit.state import State
-from nlds_admin.common.connect import connect_to_object_store
+from nlds_admin.common.connect import ObjectStoreConnection
 from nlds_admin.rabbit.publisher import RabbitMQPublisher
 from nlds_admin.common.bcolors import bcolors
 import nlds_admin.common.config as CFG
 from nlds_admin.common.create_sub_id import create_sub_id
+
+import click
 
 
 def file_has_object_storage_location(file: dict) -> bool:
@@ -69,7 +71,7 @@ def get_incomplete_sub_ids(
         api_action = None
 
     for tr in trans_records:
-        print(
+        click.echo(
             bcolors.YELLOW
             + "Working on TransactionRecord:\n"
             + bcolors.ENDC
@@ -122,7 +124,7 @@ def check_for_files_on_object_store(
     transaction_id: str,
     search_files: list[str],
 ) -> tuple[list[str], list[str]]:
-    mc = connect_to_object_store()
+    mc = ObjectStoreConnection()
     uploaded_files = []
     missing_files = []
     # nlds bucket is "nlds."+transaction_id
@@ -362,14 +364,14 @@ def fix_transfer_putting(
     if len(incomplete_files) != 0:
         # these files are incomplete - they are present on the object storage, but do
         # not have the correct entry in the database
-        print(
+        click.echo(
             bcolors.GREEN
             + "    Incomplete files, on object store but not updated in database:"
             + bcolors.ENDC
         )
         for f in incomplete_files:
-            print(f"        {f}")
-        print(
+            click.echo(f"        {f}")
+        click.echo(
             bcolors.RED
             + "Files have been found that are uploaded to the object store but do "
             "not have complete database records.\n"
@@ -390,14 +392,14 @@ def fix_transfer_putting(
             )
 
     if len(missing_files) > 0:
-        print(
+        click.echo(
             bcolors.GREEN
             + "    Missing files, in database but not on object store:"
             + bcolors.ENDC
         )
         for f in missing_files:
-            print(f"        {f}")
-        print(
+            click.echo(f"        {f}")
+        click.echo(
             bcolors.RED
             + "Files have been found that have database entries, but are missing "
             "from the object store. \n"
@@ -419,15 +421,15 @@ def fix_transfer_putting(
 
     # no files are incomplete, we can mark the sub ids as finished
     # need to send a message to the Monitor Queue
-    print(
+    click.echo(
         bcolors.GREEN
         + "    Sub ids with all files uploaded to object store:"
         + bcolors.ENDC
     )
     for sid in incomplete_sub_ids:
-        print(f"        {sid}")
+        click.echo(f"        {sid}")
     if len(incomplete_sub_ids) > 0:
-        print(
+        click.echo(
             bcolors.RED
             + "Sub ids have been found with incomplete database records, even "
             "though the transfer completed.\n"
@@ -486,9 +488,9 @@ def fix_transaction_status(
         transaction_id = ret_trans_id
 
     if len(incomplete_sub_ids) > 0:
-        print(bcolors.YELLOW + "    Incomplete sub_ids" + bcolors.ENDC)
+        click.echo(bcolors.YELLOW + "    Incomplete sub_ids" + bcolors.ENDC)
         for i in incomplete_sub_ids:
-            print(f"        {i}")
+            click.echo(f"        {i}")
 
         # branch on the state to do the required fix
         # only one at the moment (TRANSFER_PUTTING) but can extend this

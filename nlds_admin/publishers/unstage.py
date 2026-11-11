@@ -21,6 +21,8 @@ from nlds_admin.common.bcolors import bcolors
 from nlds_admin.common.create_sub_id import create_sub_id
 from nlds_admin.rabbit.state import State
 
+import click
+
 
 def get_files_from_holding(
     rpc_publisher: RabbitMQRPCPublisher,
@@ -42,7 +44,7 @@ def get_files_from_holding(
     )
     # Requires deserializing (decompressing)
     files_response = deserialize(files_stat)
-    print(
+    click.echo(
         bcolors.YELLOW
         + "Working on Holding with holding_id: "
         + bcolors.ENDC
@@ -50,14 +52,14 @@ def get_files_from_holding(
     )
     file_data = files_response[MSG.DATA]
     return_dict = {}
-    print(bcolors.RED + "  Files:" + bcolors.ENDC)
+    click.echo(bcolors.RED + "  Files:" + bcolors.ENDC)
     for h in file_data[MSG.HOLDINGS]:
         holding = file_data[MSG.HOLDINGS][h]
         for tr in holding[MSG.TRANSACTIONS]:
             return_dict[tr] = []
             files = holding[MSG.TRANSACTIONS][tr][MSG.FILELIST]
             for f in files:
-                print(f"    {f["original_path"]}")
+                click.echo(f"    {f["original_path"]}")
                 return_dict[tr].append(f["original_path"])
     return return_dict
 

@@ -20,6 +20,8 @@ from nlds_admin.common.deserialize import deserialize
 from nlds_admin.common.bcolors import bcolors
 from nlds_admin.common.create_sub_id import create_sub_id
 
+import click
+
 
 def file_has_empty_tape_storage_location(file: dict):
     locations = file["locations"]
@@ -58,7 +60,7 @@ def get_files_with_incomplete_records(
     )
     # Requires deserializing (decompressing)
     files_response = deserialize(files_stat)
-    print(
+    click.echo(
         bcolors.YELLOW
         + "Working on Holding with holding_id:\n"
         + bcolors.ENDC
@@ -66,7 +68,7 @@ def get_files_with_incomplete_records(
     )
     file_data = files_response[MSG.DATA]
     return_dict = {}
-    print(bcolors.YELLOW + "  Untaping files:" + bcolors.ENDC)
+    click.echo(bcolors.YELLOW + "  Untaping files:" + bcolors.ENDC)
     for h in file_data[MSG.HOLDINGS]:
         holding = file_data[MSG.HOLDINGS][h]
         for tr in holding[MSG.TRANSACTIONS]:
@@ -74,7 +76,7 @@ def get_files_with_incomplete_records(
             files = holding[MSG.TRANSACTIONS][tr][MSG.FILELIST]
             for f in files:
                 if file_has_empty_tape_storage_location(f):
-                    print(f"    {f["original_path"]}")
+                    click.echo(f"    {f["original_path"]}")
                     return_dict[tr].append(f["original_path"])
     return return_dict
 
@@ -175,7 +177,7 @@ def fix_holding_tape_records(
         # count the incomplete files for each transaction in the dictionary
         for k in incomplete_files:
             n_incmpl_files += len(incomplete_files[k])
-        print(
+        click.echo(
             bcolors.YELLOW
             + f"    Number of incomplete files: {n_incmpl_files}"
             + bcolors.ENDC

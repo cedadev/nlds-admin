@@ -11,11 +11,11 @@ import os.path
 """
 Utility program to manipulate messages in the NLDS queue.
 The following operations can be performed:
-1. split: if they have too many files to complete before the message timeout.
-2. pop: pop a message off the head of the queue and output its details.
-3. list: list a number of messages and output the details.
-4. dump: dump all the messages in a queue to a file.
-5. load: load the dumped messages back into the queue.
+  1. split: if they have too many files to complete before the message timeout.
+  2. pop: pop a message off the head of the queue and output its details.
+  3. list: list a number of messages and output the details.
+  4. dump: dump all the messages in a queue to a file.
+  5. load: load the dumped messages back into the queue.
 """
 
 
@@ -182,11 +182,11 @@ def pop(queue, ack, nack):
 
     if ack:
         consumer.channel.basic_ack(method.delivery_tag)
-        print("... acked")
+        click.echo("... acked")
 
     if nack:
         consumer.channel.basic_nack(method.delivery_tag)
-        print("... nacked")
+        click.echo("... nacked")
 
 
 @nlds_qm.command("dump", help="dump messages.")
@@ -297,7 +297,7 @@ def dump(queue, number, target, length, compress=False, ack=False):
         # republish message if not acknowledge flag set
         consumer.basic_ack(method=method)
         if not ack:
-            print("Republish!")
+            click.echo("Republish!")
             consumer.publish_message(rk, msg_dict=body_json, properties=properties)
 
 

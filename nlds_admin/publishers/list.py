@@ -1,7 +1,7 @@
-
 """
 list.py
 """
+
 __author__ = "Neil Massey and Jack Leland"
 __date__ = "24 Feb 2025"
 __copyright__ = "Copyright 2025 United Kingdom Research and Innovation"
@@ -16,15 +16,16 @@ from nlds_admin.publishers.process_tag import process_tag
 
 from nlds_admin.rabbit.rpc_publisher import RabbitMQRPCPublisher
 
+
 def list_holdings(
     rpc_publisher: RabbitMQRPCPublisher,
     user: str,
     group: str,
     groupall: Optional[bool] = False,
-    label:  Optional[str] = None,
-    holding_id:  Optional[int] = None,
-    transaction_id:  Optional[str] = None,
-    tag:  Optional[str] = {},
+    label: Optional[str] = None,
+    holding_id: Optional[int] = None,
+    transaction_id: Optional[str] = None,
+    tag: Optional[str] = {},
     query_user: Optional[str] = None,
     query_group: Optional[str] = None,
     limit: Optional[int] = None,
@@ -81,5 +82,5 @@ def list_holdings(
         response = response.decode()
         return response
     else:
-        msg="Catalog service could not be reached in time."
+        msg = "Catalog service could not be reached in time."
         raise RuntimeError(msg)

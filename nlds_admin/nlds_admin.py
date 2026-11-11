@@ -10,6 +10,8 @@ from nlds_admin.publishers.fix_status import fix_transaction_status
 from nlds_admin.publishers.fix_tape_records import fix_holding_tape_records
 from nlds_admin.publishers.unstage import unstage_holding
 from nlds_admin.publishers.untape import untape_holding
+from nlds_admin.publishers.view_buckets import view_holding_buckets
+from nlds_admin.publishers.fix_policy import fix_bucket_policy
 
 from nlds_admin.common import prints
 from nlds_admin import __version__
@@ -933,7 +935,7 @@ def unstage(ctx, user, group, holding_id, transaction_id, limit, max_per_message
     type=str,
     help="Output the results of unstaging in JSON.",
 )
-def unstage(ctx, user, group, holding_id, transaction_id, limit, max_per_message, json):
+def untape(ctx, user, group, holding_id, transaction_id, limit, max_per_message, json):
     """
     Untape the files in a holding by removing the location record of them on the "
     Tape.
@@ -948,6 +950,154 @@ def unstage(ctx, user, group, holding_id, transaction_id, limit, max_per_message
             transaction_id=transaction_id,
             limit=limit,
             max_per_message=max_per_message,
+            json=json,
+        )
+    except RuntimeError as e:
+        raise click.UsageError(e)
+
+
+@nlds_admin.command(
+    "view-buckets",
+    help=("""
+        List and output information about the buckets on the Object Store used to hold
+        NLDS data.  The options are:
+         1. List all the buckets for a single user
+         2. List all the buckets for a group
+         3. List all the buckets for a holding
+         4. List the bucket for a single transaction
+        """),
+)
+@click.pass_context
+@click.option(
+    "-u",
+    "--user",
+    type=str,
+    help="The username to list the buckets for.",
+)
+@click.option(
+    "-g",
+    "--group",
+    type=str,
+    help="The group to list the buckets for.",
+)
+@click.option(
+    "-h",
+    "--holding-id",
+    default=None,
+    type=int,
+    help=("The numeric id of the holding to list the buckets for."),
+)
+@click.option(
+    "-n",
+    "--transaction_id",
+    default=None,
+    type=str,
+    help=("The UUID transaction id to list the buckets for."),
+)
+@click.option(
+    "-L",
+    "--limit",
+    default=None,
+    type=int,
+    help=("Limit the number of buckets to view."),
+)
+@click.option(
+    "-P",
+    "--policy",
+    default=False,
+    is_flag=True,
+    type=bool,
+    help=("View the bucket access policies"),
+)
+@click.option(
+    "-j",
+    "--json",
+    default=None,
+    type=str,
+    help="Output the results of viewing the buckets in JSON.",
+)
+def view_buckets(ctx, user, group, holding_id, transaction_id, limit, policy, json):
+    """
+    List the buckets for a single user, all for a group or by holding or transaction id
+    """
+    try:
+        rpc_publisher = ctx.obj
+        view_holding_buckets(
+            rpc_publisher=rpc_publisher,
+            user=user,
+            group=group,
+            holding_id=holding_id,
+            transaction_id=transaction_id,
+            limit=limit,
+            policy=policy,
+            json=json,
+        )
+    except RuntimeError as e:
+        raise click.UsageError(e)
+
+
+@nlds_admin.command(
+    "fix-policy",
+    help=("""
+        Fix the access policies to the buckets.  These may be erroneously named after 
+        the accounts portal groups, but should be named after the linux / LDAP groups.
+        In most cases this means prefixing them with "gws_" 
+        """),
+)
+@click.pass_context
+@click.option(
+    "-u",
+    "--user",
+    type=str,
+    help="The username to fix the bucket policies for.",
+)
+@click.option(
+    "-g",
+    "--group",
+    type=str,
+    help="The group to fix the bucket policies for.",
+)
+@click.option(
+    "-h",
+    "--holding-id",
+    default=None,
+    type=int,
+    help=("The numeric id of the holding to fix the bucket policies for."),
+)
+@click.option(
+    "-n",
+    "--transaction_id",
+    default=None,
+    type=str,
+    help=("The UUID transaction id to fix the bucket policies for."),
+)
+@click.option(
+    "-L",
+    "--limit",
+    default=None,
+    type=int,
+    help=("Limit the number of transactions to fix the bucket policies for."),
+)
+@click.option(
+    "-j",
+    "--json",
+    default=None,
+    type=str,
+    help="Output the results of viewing the buckets in JSON.",
+)
+def fix_policy(ctx, user, group, holding_id, transaction_id, limit, json):
+    """
+    Fix the bucket access policy for a user, group, holding_id or transaction id
+    """
+    try:
+        rpc_publisher = ctx.obj
+        fix_bucket_policy(
+            rpc_publisher=rpc_publisher,
+            user=user,
+            group=group,
+            holding_id=holding_id,
+            transaction_id=transaction_id,
+            limit=limit,
             json=json,
         )
     except RuntimeError as e:

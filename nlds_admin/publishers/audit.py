@@ -16,6 +16,8 @@ from nlds_admin.publishers.find import find_files
 from nlds_admin.common.deserialize import deserialize
 from nlds_admin.rabbit import message_keys as MSG
 
+import click
+
 
 def audit_holding(
     rpc_publisher: RabbitMQRPCPublisher,
@@ -72,4 +74,4 @@ def audit_holding(
         transaction = t_transaction[list(t_transaction.keys())[0]]
         files = transaction[MSG.FILELIST]
         for f in files:
-            print(f["original_path"], f["size"])
+            click.echo(f["original_path"], f["size"])
