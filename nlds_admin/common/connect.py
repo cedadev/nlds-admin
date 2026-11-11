@@ -25,3 +25,7 @@ class ObjectStoreConnection:
         policy_raw = self.client.get_bucket_policy(bucket)
         policy = json.loads(policy_raw)
         return policy
+
+    def set_bucket_policy(self, bucket: str, policy: dict) -> None:
+        # encode JSON policy to string when setting the policy
+        self.client.set_bucket_policy(bucket_name, json.dumps(policy))
