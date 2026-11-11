@@ -17,6 +17,7 @@ import nlds_admin.rabbit.message_keys as MSG
 from nlds_admin.rabbit.rpc_publisher import RabbitMQRPCPublisher
 from nlds_admin.common.deserialize import deserialize
 from nlds_admin.common.connect import ObjectStoreConnection
+from minio.error import S3Error
 
 import click
 
@@ -32,9 +33,9 @@ def decode_policy(policy: dict) -> str:
     for S in statements:
         P = S["Principal"]
         A = S["Action"]
-        if P["group"]:
+        if "group" in P and P["group"]:
             policy += f"Group: {", ".join(P["group"])}: "
-        if P["user"]:
+        if "user" in P and P["user"]:
             policy += f"User: {", ".join(P["user"])}: "
         policy += ", ".join(A)
         policy += " ; "
@@ -107,10 +108,14 @@ def view_holding_buckets(
                 # if we want to view the policy then we have to fetch it from the
                 # object store
                 if policy:
-                    raw_policy = s3_client.get_bucket_policy(get_bucket_name(t))
-                    click.echo(
-                        f"{'':<5}{get_bucket_name(t)} {decode_policy(raw_policy)}"
-                    )
+                    try:
+                        raw_policy = s3_client.get_bucket_policy(get_bucket_name(t))
+                    except S3Error:
+                        click.echo(f"{'':<5}{get_bucket_name(t)} No bucket (yet?)")
+                    else:
+                        click.echo(
+                            f"{'':<5}{get_bucket_name(t)} {decode_policy(raw_policy)}"
+                        )
                 else:
                     click.echo(f"{'':<5}{get_bucket_name(t)}")
     else:
