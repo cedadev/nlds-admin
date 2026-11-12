@@ -17,6 +17,7 @@ from nlds_admin.publishers.view_buckets import (
 
 import grp
 import copy
+from minio.error import S3Error
 
 OBJECT_STORE_ACCESS_POLICY_CONFIG = "object_store_access_policy"
 NLDS_USER_ACCESS_POLICY_CONFIG = "nlds_user"
@@ -71,26 +72,30 @@ def _edit_nlds_user_policy(bucket_policy: dict):
 
 def _edit_group_policy(bucket_policy: dict, old_group: str, new_group: str):
     statements = bucket_policy["Statement"]
+    create = True
     for s in statements:
         try:
             principal = s["Principal"]
             if old_group in principal["group"]:
                 # remove the old group
                 statements.remove(s)
+            if new_group in principal["group"]:
+                create = False
         except KeyError:
             # not found - is okay, create remains True
             pass
 
-    try:
-        group_statement = access_policies[GROUP_ACCESS_POLICY_CONFIG]
-        group_statement["Principal"]["group"] = [new_group]
-    except KeyError:
-        raise KeyrError(
-            f"Could not find the {self.GROUP_ACCESS_POLICY_CONFIG} key "
-            f"in the {self.OBJECT_STORE_ACCESS_POLICY_CONFIG} section of the "
-            f"config file"
-        )
-    statements.append(group_statement)
+    if create:
+        try:
+            group_statement = access_policies[GROUP_ACCESS_POLICY_CONFIG]
+            group_statement["Principal"]["group"] = [new_group]
+        except KeyError:
+            raise KeyrError(
+                f"Could not find the {self.GROUP_ACCESS_POLICY_CONFIG} key "
+                f"in the {self.OBJECT_STORE_ACCESS_POLICY_CONFIG} section of the "
+                f"config file"
+            )
+        statements.append(group_statement)
 
 def fix_bucket_policy(
     rpc_publisher: RabbitMQRPCPublisher,
@@ -126,8 +131,12 @@ def fix_bucket_policy(
             click.echo(f"{'':<1}{h['user']:<16}{group:<16}{h['id']:<6}")
 
             for t in h[MSG.TRANSACTIONS]:
-                # get the policy fro the bucket
-                policy = s3_client.get_bucket_policy(get_bucket_name(t))
+                # get the policy from the bucket
+                try:
+                    policy = s3_client.get_bucket_policy(get_bucket_name(t))
+                except S3Error:
+                    # bucket not found, continue to next
+                    continue
                 # copy or create then edit the policy
                 if policy == {}:
                     new_policy = _create_bucket_policy_template(bucket_name)
