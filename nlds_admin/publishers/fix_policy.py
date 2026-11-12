@@ -131,11 +131,14 @@ def fix_bucket_policy(
             click.echo(f"{'':<1}{h['user']:<16}{group:<16}{h['id']:<6}")
 
             for t in h[MSG.TRANSACTIONS]:
+                # get the bucket name
+                bucket_name = get_bucket_name(t)
                 # get the policy from the bucket
                 try:
-                    policy = s3_client.get_bucket_policy(get_bucket_name(t))
+                    policy = s3_client.get_bucket_policy(bucket_name)
                 except S3Error:
                     # bucket not found, continue to next
+                    click.echo(f"{'':<5}No bucket: {bucket_name} (yet?)")
                     continue
                 # copy or create then edit the policy
                 if policy == {}:
@@ -148,8 +151,8 @@ def fix_bucket_policy(
                 # edit the group policy
                 _edit_group_policy(new_policy, group, use_group)
 
-                print(f"{'':<5}Edited: {get_bucket_name(t)} {decode_policy(new_policy)}")
-                #s3_client.set_bucket_policy(new_policy)
+                click.echo(f"{'':<5}Edited: {bucket_name} {decode_policy(new_policy)}")
+                s3_client.set_bucket_policy(bucket_name, new_policy)
     else:
         msg = "Catalog service could not be reached in time."
         raise RuntimeError(msg)
